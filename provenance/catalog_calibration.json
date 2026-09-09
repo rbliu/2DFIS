@@ -1,0 +1,18 @@
+{
+  "author_clarification_date": "2026-09-10",
+  "confirmed": "Color correction is performed at catalog level following LoVoCCS, with coefficients in the manuscript Appendix.",
+  "coefficient_file": "photometry/manuscript_color_terms.json",
+  "manuscript_sources": [
+    {
+      "file": "Appendix.tex",
+      "sha256": "daf1e608c75d25696c35949cd9fd2a4d8fe04d56e00ad397c5f86800a8fe7200"
+    },
+    {
+      "file": "03_dataprocessing.tex",
+      "sha256": "35935451d8f3f7799f7d261dbc6479def01ff5c119c2023a8a852bff77db046f"
+    }
+  ],
+  "scope": "Appendix supplies the third-generation PS1 g/r/i/z polynomials. The separate SDSS u relation is transcribed from Section 3; no specific u execution route is inferred.",
+  "historical_lsst_configs_modified": false,
+  "historical_cfht_invocation_recovered": false
+}

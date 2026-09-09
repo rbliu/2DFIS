@@ -12,6 +12,10 @@ The source checkout was clean when collected. Its GPL version 3 license is
 preserved in `qc/upstream/LICENSE`; its README and source attribution are retained.
 This directory is not covered by a conflicting interpretation of the root
 GPL-2.0 file.
+The added photometric-correction modules come from the same pinned commit.
+Site-specific paths in `photometric_correction_config.py` are replaced by
+`<COLOR_TERM_DATA>` placeholders. This is a documented modification, not a
+change to the numerical defaults; both original and published hashes are recorded.
 
 The scripts in `qc/adapters/` were prepared for the 2026 2DFIS revision. They
 implement the LoVoCCS QC method with CFHT Gen2 FITS input and are distributed

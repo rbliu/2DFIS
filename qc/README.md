@@ -9,6 +9,11 @@ not the original CFHT/Gen2 reduction source. The upstream README describes that
 project as a whole; it must not be read as the procedure applied to 2DFIS.
 The check_visit and quality_check modules are preserved as method/source
 references. No lensing-map workflow is invoked by this archive.
+The author subsequently clarified that LoVoCCS was also used for catalog-level
+color corrections. The corresponding `photometric_correction` modules and their
+config dependency are included under the same upstream snapshot; see
+`../photometry/README.md`. Only site-specific paths in the additional upstream
+config were redacted, as recorded in the source inventory.
 
 `adapters/build_visit_qc.py` and `adapters/render_visit_qc_original_style.py`
 are the scripts used for the 2026 all-visit QC revision. The archive version adds

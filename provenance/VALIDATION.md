@@ -8,8 +8,9 @@ Prepared and checked on 2026-09-10 (Asia/Shanghai).
   against the author list, original read-only registries and public CADC records.
 - 32 direct input URLs agree with the manifest. CADC returned the exact FITS
   artifact names, sizes and MD5 checksums; the images themselves were not downloaded.
-- 272 source-file checksum records verified after site-path redaction.
-- 137 Python files (including saved task-config backups) passed syntax parsing.
+- 275 source-file checksum records verified after site-path redaction, including
+  the three pinned photometric-correction modules added after author clarification.
+- 140 Python files (including saved task-config backups) passed syntax parsing.
   Syntax parsing does not import LSST or evaluate the saved configuration.
 - The published plotting adapter successfully regenerated the FRB visit 2785487
   four-panel PNG from existing local revision measurements; its layout was checked.
@@ -18,6 +19,10 @@ Prepared and checked on 2026-09-10 (Asia/Shanghai).
   key, raw FITS image, coadd, or full science catalog was included.
 - The original root license was retained; LoVoCCS's GPL-3.0 license is preserved
   separately, and source-derived QC adapters identify their license.
+- Color coefficients were checked against the local manuscript and transcribed
+  with explicit target/reference bands, polynomial order and source sections.
+  The author-confirmed catalog-level stage is recorded separately from what
+  the historical execution files independently establish.
 
 The archived configuration files were not changed to resolve scientific
 disagreements. No raw-to-coadd reduction was rerun, no per-band configuration

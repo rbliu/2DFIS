@@ -96,5 +96,14 @@ conceal a configuration mismatch or to overwrite an existing science repository.
 Reruns such as `coadd2_0325_ugri`, `coadd2_old_r` and `*_0527` are retained as
 alternative historical records, not silently selected as final products.
 
-QC runs only after image/catalog processing. See [QC instructions](../qc/README.md).
+After LSST catalog measurement/extraction, the author applies color-term and
+photometric corrections at catalog level following LoVoCCS; see
+[catalog calibration](../photometry/README.md) for the coefficients and source
+modules. This separate post-processing stage does not change LSST images and
+must not be duplicated by enabling LSST color terms. Its exact historical
+CFHT invocation is not inferred from upstream DECam defaults.
+
+Visit-level PSF QC reads the single-epoch products independently of this catalog
+calibration. Limiting-magnitude analyses require the appropriate calibrated
+catalogs. See [QC instructions](../qc/README.md).
 Weak-lensing map generation and related downstream analyses are out of scope.

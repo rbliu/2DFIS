@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "provenance": "Transcribed from the author's local manuscript on 2026-09-10; not a recovered historical configuration or an executed correction.",
+  "author_confirmed_stage": "Catalog-level correction following LoVoCCS, subsequent to LSST image/catalog processing",
+  "equation": "m_target - m_reference = a0 + a1*x + a2*x^2 + a3*x^3",
+  "coefficient_order": ["a0", "a1", "a2", "a3"],
+  "relations": [
+    {
+      "target_band": "g2",
+      "filter_id": "MP9402",
+      "reference_system": "PS1",
+      "reference_band": "g",
+      "color_bands": ["g", "i"],
+      "coefficients": [0.014, 0.059, -0.00313, -0.00178],
+      "source": "Appendix A: Third Generation MegaCam Filters",
+      "observed_in_2dfis": true
+    },
+    {
+      "target_band": "r2",
+      "filter_id": "MP9602",
+      "reference_system": "PS1",
+      "reference_band": "r",
+      "color_bands": ["g", "i"],
+      "coefficients": [0.003, -0.05, 0.0125, -0.00699],
+      "source": "Appendix A: Third Generation MegaCam Filters",
+      "observed_in_2dfis": true
+    },
+    {
+      "target_band": "i3",
+      "filter_id": "MP9703",
+      "reference_system": "PS1",
+      "reference_band": "i",
+      "color_bands": ["g", "i"],
+      "coefficients": [0.006, -0.024, 0.00627, -0.00523],
+      "source": "Appendix A: Third Generation MegaCam Filters",
+      "observed_in_2dfis": true
+    },
+    {
+      "target_band": "z2",
+      "filter_id": "MP9901",
+      "reference_system": "PS1",
+      "reference_band": "z",
+      "color_bands": ["g", "i"],
+      "coefficients": [-0.016, -0.069, 0.0239, -0.0056],
+      "source": "Appendix A: Third Generation MegaCam Filters",
+      "observed_in_2dfis": false
+    },
+    {
+      "target_band": "u2",
+      "filter_id": "MP9302",
+      "reference_system": "SDSS",
+      "reference_band": "u",
+      "color_bands": ["u", "g"],
+      "coefficients": [-0.165, 0.036, 0.0, 0.0],
+      "source": "Section 3: Single-Frame Processing (not present in the local Appendix)",
+      "observed_in_2dfis": true,
+      "execution_status": "Relation stated in the manuscript; the historical u-band catalog correction and any stellar-locus step still require confirmation"
+    }
+  ]
+}

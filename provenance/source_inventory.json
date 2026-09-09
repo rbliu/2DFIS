@@ -2126,5 +2126,29 @@
     "source_sha256": "fb63122be8eb3e8aa273c502eb5b0db9579b6148f728784806d7915db03e5956",
     "archived_sha256": "fb63122be8eb3e8aa273c502eb5b0db9579b6148f728784806d7915db03e5956",
     "site_paths_redacted": false
+  },
+  {
+    "path": "qc/upstream/python_scripts/photometric_correction/color_terms.py",
+    "source_url": "https://raw.githubusercontent.com/astroenglert/lovoccs_pipe/132bcb20c966ef2d0c7b93ce5d46f9a52f3f12c4/python_scripts/photometric_correction/color_terms.py",
+    "source_sha256": "6c69be9177aded6179d004b2ea709305d4d5b2411f723a6646bb23ab2c6cf686",
+    "archived_sha256": "6c69be9177aded6179d004b2ea709305d4d5b2411f723a6646bb23ab2c6cf686",
+    "site_paths_redacted": false,
+    "provenance_note": "Retrieved at the exact commit previously verified for the clean server checkout; not claimed as the historical CFHT driver."
+  },
+  {
+    "path": "qc/upstream/python_scripts/photometric_correction/zero_point.py",
+    "source_url": "https://raw.githubusercontent.com/astroenglert/lovoccs_pipe/132bcb20c966ef2d0c7b93ce5d46f9a52f3f12c4/python_scripts/photometric_correction/zero_point.py",
+    "source_sha256": "7917cba6473a236f0de23287e81d8eb77a846ce89e0b0cbb38d5638f3d648744",
+    "archived_sha256": "7917cba6473a236f0de23287e81d8eb77a846ce89e0b0cbb38d5638f3d648744",
+    "site_paths_redacted": false,
+    "provenance_note": "Retrieved at the exact commit previously verified for the clean server checkout; not claimed as the historical CFHT driver."
+  },
+  {
+    "path": "qc/upstream/python_scripts/configs/photometric_correction_config.py",
+    "source_url": "https://raw.githubusercontent.com/astroenglert/lovoccs_pipe/132bcb20c966ef2d0c7b93ce5d46f9a52f3f12c4/python_scripts/configs/photometric_correction_config.py",
+    "source_sha256": "f0ce4f5e380810f4406b2193baaf0408230d0b3d61e9b792264e553ac3a5b4b0",
+    "archived_sha256": "d37e4b9e6acdafddf3ab6e36d73f2545ad0aeda0efb3375365cd370b97bcdceb",
+    "site_paths_redacted": true,
+    "provenance_note": "Retrieved at the exact commit previously verified for the clean server checkout; not claimed as the historical CFHT driver."
   }
 ]

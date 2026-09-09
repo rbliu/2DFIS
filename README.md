@@ -2,7 +2,7 @@
 
 Supporting material for the 2DFIS overview paper: the CFHT input-exposure
 manifest, recovered LSST Gen2 configuration files and commands, and LoVoCCS
-quality-control source code. This is a **provenance archive**, not a new science
+catalog-calibration and quality-control source code. This is a **provenance archive**, not a new science
 data release or a claim that an end-to-end reprocessing has been validated.
 
 ## Contents
@@ -13,15 +13,19 @@ data release or a claim that an end-to-end reprocessing has been validated.
 | [data/download_urls.txt](data/download_urls.txt) | Direct downloads of the 32 Elixir-preprocessed input FITS files |
 | [processing/](processing/) | Recovered user overrides, full persisted task configurations and backups, historical commands, visit/patch lists, Butler parent records and package versions |
 | [workflow/README.md](workflow/README.md) | Processing order, task-to-config mapping, setup and reproduction prerequisites |
+| [photometry/README.md](photometry/README.md) | Author-confirmed catalog-level color correction, manuscript coefficients and upstream method references |
 | [qc/README.md](qc/README.md) | LoVoCCS source snapshot and the CFHT all-visit QC revision adapters |
 | [provenance/KNOWN_GAPS.md](provenance/KNOWN_GAPS.md) | Unresolved historical configuration and calibration provenance |
 | [provenance/source_inventory.json](provenance/source_inventory.json) | SHA-256 checksums of collected source files and published copies |
 
-Read the known gaps **before using this archive to reproduce photometric
-calibration**. In particular, surviving configurations contain
-`applyColorTerms=False`, and the exact per-band configuration history and any
-subsequent catalog-level corrections have not yet been established. The archive
-preserves these records rather than changing them to match a manuscript claim.
+The author has confirmed that color terms were applied **at catalog level,
+following the LoVoCCS procedure**, with the coefficients given in the manuscript
+Appendix. Therefore, `applyColorTerms=False` in the LSST image-processing
+configurations is consistent with the intended workflow; it does not imply that
+color correction was omitted. See [photometry/README.md](photometry/README.md).
+The exact historical invocation, calibration-star selection and per-band
+configuration history still need to be recovered; read the known gaps before
+attempting numerical reproduction. Archived LSST settings have not been changed.
 
 ## Input data
 
@@ -59,8 +63,10 @@ The author-reported `obs_cfht` revision is
 [`549c8174caa0f697f3f83d3bd6ff8349d2df08de`](https://github.com/lsst/obs_cfht/commit/549c8174caa0f697f3f83d3bd6ff8349d2df08de).
 The mapper is `lsst.obs.cfht.MegacamMapper`.
 
-LoVoCCS was used for subsequent QC and limiting-magnitude diagnostics, not as
-a replacement for the LSST image processing. The available upstream checkout
+LoVoCCS was used for subsequent catalog-level color-term/photometric corrections,
+QC and limiting-magnitude diagnostics, not as a replacement for the LSST image
+processing. The catalog corrections do not change the LSST-generated images.
+The available upstream checkout
 is newer than the historical reduction; its identity and the 2026 QC adaptations
 are explicitly distinguished in [qc/README.md](qc/README.md).
 

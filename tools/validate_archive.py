@@ -3,6 +3,7 @@ import ast
 from collections import Counter
 import hashlib
 import json
+import math
 from pathlib import Path
 import re
 import sys
@@ -29,6 +30,22 @@ for entry in exposures:
     check(bool(re.fullmatch(r'md5:[0-9a-f]{32}',entry['cadc_current_checksum'])), 'Invalid checksum')
 urls=(ROOT/'data/download_urls.txt').read_text().splitlines()
 check(urls == [e['download_url'] for e in exposures], 'URL list differs from manifest')
+
+terms = json.loads((ROOT/'photometry/manuscript_color_terms.json').read_text())
+check(terms['coefficient_order'] == ['a0','a1','a2','a3'], 'Polynomial coefficient order')
+relations = {r['target_band']: r for r in terms['relations']}
+check(set(relations) == {'u2','g2','r2','i3','z2'}, 'Color-relation band coverage')
+for band, relation in relations.items():
+    coefficients = relation['coefficients']
+    check(len(coefficients) == 4 and all(math.isfinite(x) for x in coefficients),
+          'Invalid polynomial coefficients: '+band)
+    check(relation['observed_in_2dfis'] == (band != 'z2'), 'Observed-band flag: '+band)
+    if band in ('g2','r2','i3','z2'):
+        check(relation['color_bands'] == ['g','i'] and relation['reference_system'] == 'PS1',
+              'Wrong PS1 reference color: '+band)
+    else:
+        check(relation['color_bands'] == ['u','g'] and relation['reference_system'] == 'SDSS',
+              'Wrong SDSS reference color')
 
 records = json.loads((ROOT/'provenance/source_inventory.json').read_text())
 for record in records:

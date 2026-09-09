@@ -10,6 +10,14 @@ Both fields' current saved `processCcdOutputs_noct/config/processCcd.py` contain
 `config.calibrate.photoCal.applyColorTerms=False`; their current saved
 `jointcal/config/jointcal.py` also has `config.applyColorTerms=False`.
 
+**Resolved by the author on 2026-09-10:** color terms were applied at catalog
+level following the LoVoCCS procedure, using the parameters in the manuscript
+Appendix. The disabled LSST switches are therefore consistent with that workflow,
+not evidence of a missing color correction. The coefficients have been transcribed
+in `photometry/manuscript_color_terms.json`, with their source and sign convention.
+The corresponding upstream color-term, zero-point and configuration modules are
+now included as method references at the already-identified LoVoCCS commit.
+
 ClusterRot's last saved processCcd and jointcal configurations select `sdss`
 for both reference loaders. Its processCcd backups also contain Gaia/PS1 and
 Gaia/SDSS variants. FRB's last saved records select `gaia` and `pan-starrs`.
@@ -17,12 +25,19 @@ These local dataset labels alone do not prove the reference releases or which
 configuration was applied to each exposure. `provenance/calibration_settings.json`
 provides an automatically extracted index; the full original settings are retained.
 
-The manuscript describes explicit color-term application and Gaia/PS1/SDSS
-calibration. A later catalog-level correction may explain part of the difference,
-but its exact code, coefficients, input catalogs and execution record have not
-been identified here. In addition, the recovered hand-written PS1 override has
-commented-out cubic coefficients: their presence in a comment is **not evidence
-that a cubic correction executed**. These points require author confirmation.
+The historical CFHT invocation, input matched-star catalogs, selection cuts,
+per-field zero-point offsets and uncertainty handling have not yet been linked
+to the exact paper products. The supplied upstream modules contain DECam-specific
+defaults, so they are not represented as that historical invocation. In particular,
+the upstream zero-point module defaults to a stellar-locus correction in u; the
+CFHT u-band choice still requires confirmation. The local Appendix contains PS1
+g/r/i/z relations, while the SDSS u relation occurs in Section 3.
+
+The recovered LSST overrides have commented-out cubic coefficients; these do not
+establish the subsequent catalog correction. The remaining reference-loader and
+per-band history questions are separate from the now-confirmed correction stage.
+The manuscript sentences attributing the correction to `processCcd`/`photoCalib`
+also need to be updated to the author-confirmed catalog-level description.
 
 ## 2. Files changed across runs
 
@@ -71,7 +86,8 @@ in the upstream module must not be described as measured CFHT choices.
 ## 5. Publication checklist
 
 - Confirm the final per-band processCcd/jointcal configuration mapping.
-- Identify the applied color correction, or reconcile the manuscript accordingly.
+- Archive the exact CFHT catalog-correction invocation and offsets; update the
+  manuscript's processCcd/photoCalib wording to the confirmed catalog-level stage.
 - Supply or document the reference-catalog preparation and catalog extraction.
 - Confirm the exact limiting-magnitude input selections and invocation.
 - Perform an independent end-to-end run if numerical reproduction is claimed.
