@@ -1,0 +1,4 @@
+* text=auto eol=lf
+# Preserve exact archived bytes so SHA-256 verification is platform-independent.
+processing/** -text
+qc/upstream/** -text

@@ -1,0 +1,148 @@
+import lsst.pipe.tasks.multiBand
+assert type(config)==lsst.pipe.tasks.multiBand.DeblendCoaddSourcesConfig, 'config is of type %s.%s instead of lsst.pipe.tasks.multiBand.DeblendCoaddSourcesConfig' % (type(config).__module__, type(config).__name__)
+import lsst.meas.extensions.scarlet.deblend
+import lsst.meas.deblender.deblend
+# What to do when a peak to be deblended is close to the edge of the image
+config.singleBandDeblend.edgeHandling='ramp'
+
+# When the deblender should attribute stray flux to point sources
+config.singleBandDeblend.strayFluxToPointSources='necessary'
+
+# Assign stray flux (not claimed by any child in the deblender) to deblend children.
+config.singleBandDeblend.assignStrayFlux=True
+
+# How to split flux among peaks
+config.singleBandDeblend.strayFluxRule='trim'
+
+# When splitting stray flux, clip fractions below this value to zero.
+config.singleBandDeblend.clipStrayFluxFraction=0.001
+
+# Chi-squared per DOF cut for deciding a source is a PSF during deblending (un-shifted PSF model)
+config.singleBandDeblend.psfChisq1=1.5
+
+# Chi-squared per DOF cut for deciding a source is PSF during deblending (shifted PSF model)
+config.singleBandDeblend.psfChisq2=1.5
+
+# Chi-squared per DOF cut for deciding a source is a PSF during deblending (shifted PSF model #2)
+config.singleBandDeblend.psfChisq2b=1.5
+
+# Only deblend the brightest maxNumberOfPeaks peaks in the parent (<= 0: unlimited)
+config.singleBandDeblend.maxNumberOfPeaks=0
+
+# Maximum area for footprints before they are ignored as large; non-positive means no threshold applied
+config.singleBandDeblend.maxFootprintArea=1000000
+
+# Maximum linear dimension for footprints before they are ignored as large; non-positive means no threshold applied
+config.singleBandDeblend.maxFootprintSize=0
+
+# Minimum axis ratio for footprints before they are ignored as large; non-positive means no threshold applied
+config.singleBandDeblend.minFootprintAxisRatio=0.0
+
+# Mask name for footprints not deblended, or None
+config.singleBandDeblend.notDeblendedMask='NOT_DEBLENDED'
+
+# Footprints smaller in width or height than this value will be ignored; minimum of 2 due to PSF gradient calculation.
+config.singleBandDeblend.tinyFootprintSize=2
+
+# Guarantee that all peaks produce a child source.
+config.singleBandDeblend.propagateAllPeaks=True
+
+# If True, catch exceptions thrown by the deblender, log them, and set a flag on the parent, instead of letting them propagate up
+config.singleBandDeblend.catchFailures=False
+
+# Mask planes to ignore when performing statistics
+config.singleBandDeblend.maskPlanes=['SAT', 'INTRP', 'NO_DATA']
+
+# Mask planes with the corresponding limit on the fraction of masked pixels. Sources violating this limit will not be deblended.
+config.singleBandDeblend.maskLimits={}
+
+# If true, a least-squares fit of the templates will be done to the full image. The templates will be re-weighted based on this fit.
+config.singleBandDeblend.weightTemplates=False
+
+# Try to remove similar templates?
+config.singleBandDeblend.removeDegenerateTemplates=False
+
+# If the dot product between two templates is larger than this value, we consider them to be describing the same object (i.e. they are degenerate).  If one of the objects has been labeled as a PSF it will be removed, otherwise the template with the lowest value will be removed.
+config.singleBandDeblend.maxTempDotProd=0.5
+
+# Apply a smoothing filter to all of the template images
+config.singleBandDeblend.medianSmoothTemplate=True
+
+# Maximum number of iterations to deblend a single parent
+config.multiBandDeblend.maxIter=200
+
+# Relative error to use when determining stopping criteria
+config.multiBandDeblend.relativeError=0.01
+
+# Number of iterations between recentering
+config.multiBandDeblend.recenterPeriod=5
+
+# Calculate exact Lipschitz constant in every step(True) or only calculate the approximateLipschitz constant with significant changes in A,S(False)
+config.multiBandDeblend.exactLipschitz=True
+
+# Make models compact and sparse
+config.multiBandDeblend.sparse=False
+
+# Make models monotonic
+config.multiBandDeblend.monotonic=False
+
+# Make models symmetric
+config.multiBandDeblend.symmetric=False
+
+# Strictness of symmetry, from0 (no symmetry enforced) to1 (perfect symmetry required).If 'S' is not in `constraints`, this argument is ignored
+config.multiBandDeblend.symmetryThresh=1.0
+
+# Use inverse variance as deblender weights
+config.multiBandDeblend.useWeights=False
+
+# Whether or not to convolve the morphology with thePSF in each band or use the same morphology in all bands
+config.multiBandDeblend.usePsfConvolution=True
+
+# Whether or not to save the SEDs and templates
+config.multiBandDeblend.saveTemplates=True
+
+# Whether or not to process isolated sources in the deblender
+config.multiBandDeblend.processSingles=False
+
+# Whether or not to store the history for each source
+config.multiBandDeblend.storeHistory=False
+
+# Whether or not to process isolated sources in the deblender
+config.multiBandDeblend.badMask=['BAD', 'CR', 'NO_DATA', 'SAT', 'SUSPECT']
+
+# Mask planes to ignore when performing statistics
+config.multiBandDeblend.statsMask=['SAT', 'INTRP', 'NO_DATA']
+
+# Mask planes with the corresponding limit on the fraction of masked pixels. Sources violating this limit will not be deblended.
+config.multiBandDeblend.maskLimits={}
+
+# Only deblend the brightest maxNumberOfPeaks peaks in the parent (<= 0: unlimited)
+config.multiBandDeblend.maxNumberOfPeaks=0
+
+# Maximum area for footprints before they are ignored as large; non-positive means no threshold applied
+config.multiBandDeblend.maxFootprintArea=1000000
+
+# Maximum linear dimension for footprints before they are ignored as large; non-positive means no threshold applied
+config.multiBandDeblend.maxFootprintSize=0
+
+# Minimum axis ratio for footprints before they are ignored as large; non-positive means no threshold applied
+config.multiBandDeblend.minFootprintAxisRatio=0.0
+
+# Mask name for footprints not deblended, or None
+config.multiBandDeblend.notDeblendedMask='NOT_DEBLENDED'
+
+# If True, catch exceptions thrown by the deblender, log them, and set a flag on the parent, instead of letting them propagate up
+config.multiBandDeblend.catchFailures=False
+
+# Guarantee that all peaks produce a child source.
+config.multiBandDeblend.propagateAllPeaks=False
+
+# Simultaneously deblend all bands?
+config.simultaneous=False
+
+# Name of coadd
+config.coaddName='deep'
+
+# Should be set to True if fake sources have been inserted into the input data.
+config.hasFakes=False
+

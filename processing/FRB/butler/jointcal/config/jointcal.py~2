@@ -1,0 +1,422 @@
+import lsst.jointcal.jointcal
+assert type(config)==lsst.jointcal.jointcal.JointcalConfig, 'config is of type %s.%s instead of lsst.jointcal.jointcal.JointcalConfig' % (type(config).__module__, type(config).__name__)
+import lsst.meas.algorithms.flaggedSourceSelector
+import lsst.meas.algorithms.sourceSelector
+import lsst.meas.algorithms.astrometrySourceSelector
+import lsst.pipe.tasks.colorterms
+import lsst.meas.algorithms.matcherSourceSelector
+import lsst.meas.algorithms.loadIndexedReferenceObjects
+import lsst.meas.algorithms.objectSizeStarSelector
+# Fit astrometry and write the fitted result.
+config.doAstrometry=True
+
+# Fit photometry and write the fitted result.
+config.doPhotometry=True
+
+# Type of coadd, typically deep or goodSeeing
+config.coaddName='deep'
+
+# Systematic term to apply to the measured position error (pixels)
+config.positionErrorPedestal=0.02
+
+# Systematic term to apply to the measured error on flux or magnitude as a fraction of source flux or magnitude delta (e.g. 0.05 is 5% of flux or +50 millimag).
+config.photometryErrorPedestal=0.0
+
+# Matching radius between fitted and reference stars (arcseconds)
+config.matchCut=3.0
+
+# Minimum number of associated measured stars for a fitted star to be included in the fit
+config.minMeasurements=2
+
+# Minimum number of measuredStars per ccdImage before printing warnings
+config.minMeasuredStarsPerCcd=100
+
+# Minimum number of measuredStars per ccdImage before printing warnings
+config.minRefStarsPerCcd=30
+
+# Allow a line search during minimization, if it is reasonable for the model (models with a significant non-linear component, e.g. constrainedPhotometry).
+config.allowLineSearch=False
+
+# Polynomial order for fitting the simple astrometry model.
+config.astrometrySimpleOrder=3
+
+# Order of the per-chip transform for the constrained astrometry model.
+config.astrometryChipOrder=1
+
+# Order of the per-visit transform for the constrained astrometry model.
+config.astrometryVisitOrder=5
+
+# Use the input calexp WCSs to initialize a SimpleAstrometryModel.
+config.useInputWcs=True
+
+# Type of model to fit to astrometry
+config.astrometryModel='constrained'
+
+# Type of model to fit to photometry
+config.photometryModel='constrainedMagnitude'
+
+# Apply photometric color terms to reference stars?Requires that colorterms be set to a ColortermLibrary
+config.applyColorTerms=False
+
+config.colorterms.data={}
+# Order of the per-visit polynomial transform for the constrained photometry model.
+config.photometryVisitOrder=7
+
+# Do the rank update step during minimization. Skipping this can help deal with models that are too non-linear.
+config.photometryDoRankUpdate=True
+
+# Do the rank update step during minimization (should not change the astrometry fit). Skipping this can help deal with models that are too non-linear.
+config.astrometryDoRankUpdate=True
+
+# How many sigma to reject outliers at during minimization.
+config.outlierRejectSigma=5.0
+
+# Maximum number of minimize iterations to take when fitting photometry.
+config.maxPhotometrySteps=20
+
+# Maximum number of minimize iterations to take when fitting photometry.
+config.maxAstrometrySteps=20
+
+# Padding to add to 4 all edges of the bounding box (pixels)
+config.astrometryRefObjLoader.pixelMargin=300
+
+# Default reference catalog filter to use if filter not specified in exposure; if blank then filter must be specified in exposure
+config.astrometryRefObjLoader.defaultFilter=''
+
+# Mapping of camera filter name: reference catalog filter name; each reference filter must exist
+config.astrometryRefObjLoader.filterMap={'u': 'phot_g_mean_mag', 'u2': 'phot_g_mean_mag', 'g': 'phot_g_mean_mag', 'g2': 'phot_g_mean_mag', 'r': 'phot_g_mean_mag', 'r2': 'phot_g_mean_mag', 'i': 'phot_g_mean_mag', 'i2': 'phot_g_mean_mag', 'i3': 'phot_g_mean_mag', 'z': 'phot_g_mean_mag', 'z2': 'phot_g_mean_mag'}
+
+# Require that the fields needed to correct proper motion (epoch, pm_ra and pm_dec) are present?
+config.astrometryRefObjLoader.requireProperMotion=False
+
+# Name of the ingested reference dataset
+config.astrometryRefObjLoader.ref_dataset_name='gaia'
+
+# Padding to add to 4 all edges of the bounding box (pixels)
+config.photometryRefObjLoader.pixelMargin=300
+
+# Default reference catalog filter to use if filter not specified in exposure; if blank then filter must be specified in exposure
+config.photometryRefObjLoader.defaultFilter=''
+
+# Mapping of camera filter name: reference catalog filter name; each reference filter must exist
+config.photometryRefObjLoader.filterMap={'u': 'g', 'u2': 'g', 'g': 'g', 'g2': 'g', 'r': 'r', 'r2': 'r', 'i': 'i', 'i2': 'i', 'i3': 'i', 'z': 'z', 'z2': 'z'}
+
+# Require that the fields needed to correct proper motion (epoch, pm_ra and pm_dec) are present?
+config.photometryRefObjLoader.requireProperMotion=False
+
+# Name of the ingested reference dataset
+config.photometryRefObjLoader.ref_dataset_name='pan-starrs'
+
+# Apply flux limit?
+config.sourceSelector['science'].doFluxLimit=False
+
+# Apply flag limitation?
+config.sourceSelector['science'].doFlags=True
+
+# Apply unresolved limitation?
+config.sourceSelector['science'].doUnresolved=True
+
+# Apply signal-to-noise limit?
+config.sourceSelector['science'].doSignalToNoise=True
+
+# Apply isolated limitation?
+config.sourceSelector['science'].doIsolated=True
+
+# Select objects with value greater than this
+config.sourceSelector['science'].fluxLimit.minimum=None
+
+# Select objects with value less than this
+config.sourceSelector['science'].fluxLimit.maximum=None
+
+# Name of the source flux field to use.
+config.sourceSelector['science'].fluxLimit.fluxField='slot_CalibFlux_instFlux'
+
+# List of source flag fields that must be set for a source to be used.
+config.sourceSelector['science'].flags.good=[]
+
+# List of source flag fields that must NOT be set for a source to be used.
+config.sourceSelector['science'].flags.bad=['base_PixelFlags_flag_edge', 'base_PixelFlags_flag_saturated', 'base_PixelFlags_flag_interpolatedCenter', 'base_SdssCentroid_flag', 'base_PsfFlux_flag', 'base_PixelFlags_flag_suspectCenter']
+
+# Select objects with value greater than this
+config.sourceSelector['science'].unresolved.minimum=None
+
+# Select objects with value less than this
+config.sourceSelector['science'].unresolved.maximum=0.5
+
+# Name of column for star/galaxy separation
+config.sourceSelector['science'].unresolved.name='base_ClassificationExtendedness_value'
+
+# Select objects with value greater than this
+config.sourceSelector['science'].signalToNoise.minimum=10.0
+
+# Select objects with value less than this
+config.sourceSelector['science'].signalToNoise.maximum=None
+
+# Name of the source flux field to use.
+config.sourceSelector['science'].signalToNoise.fluxField='slot_CalibFlux_instFlux'
+
+# Name of the source flux error field to use.
+config.sourceSelector['science'].signalToNoise.errField='slot_CalibFlux_instFluxErr'
+
+# Name of column for parent
+config.sourceSelector['science'].isolated.parentName='parent'
+
+# Name of column for nChild
+config.sourceSelector['science'].isolated.nChildName='deblend_nChild'
+
+# Apply magnitude limit?
+config.sourceSelector['references'].doMagLimit=False
+
+# Apply flag limitation?
+config.sourceSelector['references'].doFlags=False
+
+# Apply unresolved limitation?
+config.sourceSelector['references'].doUnresolved=False
+
+# Apply signal-to-noise limit?
+config.sourceSelector['references'].doSignalToNoise=False
+
+# Apply magnitude error limit?
+config.sourceSelector['references'].doMagError=False
+
+# Select objects with value greater than this
+config.sourceSelector['references'].magLimit.minimum=None
+
+# Select objects with value less than this
+config.sourceSelector['references'].magLimit.maximum=None
+
+# Name of the source flux field to use.
+config.sourceSelector['references'].magLimit.fluxField='flux'
+
+# List of source flag fields that must be set for a source to be used.
+config.sourceSelector['references'].flags.good=[]
+
+# List of source flag fields that must NOT be set for a source to be used.
+config.sourceSelector['references'].flags.bad=[]
+
+# Select objects with value greater than this
+config.sourceSelector['references'].unresolved.minimum=None
+
+# Select objects with value less than this
+config.sourceSelector['references'].unresolved.maximum=0.5
+
+# Name of column for star/galaxy separation
+config.sourceSelector['references'].unresolved.name='base_ClassificationExtendedness_value'
+
+# Select objects with value greater than this
+config.sourceSelector['references'].signalToNoise.minimum=None
+
+# Select objects with value less than this
+config.sourceSelector['references'].signalToNoise.maximum=None
+
+# Name of the source flux field to use.
+config.sourceSelector['references'].signalToNoise.fluxField='flux'
+
+# Name of the source flux error field to use.
+config.sourceSelector['references'].signalToNoise.errField='flux_err'
+
+# Select objects with value greater than this
+config.sourceSelector['references'].magError.minimum=None
+
+# Select objects with value less than this
+config.sourceSelector['references'].magError.maximum=None
+
+# Name of the source flux error field to use.
+config.sourceSelector['references'].magError.magErrField='mag_err'
+
+config.sourceSelector['references'].colorLimits={}
+# Apply flux limit to Psf Candidate selection?
+config.sourceSelector['objectSize'].doFluxLimit=True
+
+# specify the minimum psfFlux for good Psf Candidates
+config.sourceSelector['objectSize'].fluxMin=12500.0
+
+# specify the maximum psfFlux for good Psf Candidates (ignored if == 0)
+config.sourceSelector['objectSize'].fluxMax=0.0
+
+# Apply signal-to-noise (i.e. flux/fluxErr) limit to Psf Candidate selection?
+config.sourceSelector['objectSize'].doSignalToNoiseLimit=False
+
+# specify the minimum signal-to-noise for good Psf Candidates
+config.sourceSelector['objectSize'].signalToNoiseMin=20.0
+
+# specify the maximum signal-to-noise for good Psf Candidates (ignored if == 0)
+config.sourceSelector['objectSize'].signalToNoiseMax=0.0
+
+# minimum width to include in histogram
+config.sourceSelector['objectSize'].widthMin=0.0
+
+# maximum width to include in histogram
+config.sourceSelector['objectSize'].widthMax=10.0
+
+# Name of field in Source to use for flux measurement
+config.sourceSelector['objectSize'].sourceFluxField='base_GaussianFlux_instFlux'
+
+# Standard deviation of width allowed to be interpreted as good stars
+config.sourceSelector['objectSize'].widthStdAllowed=0.15
+
+# Keep objects within this many sigma of cluster 0's median
+config.sourceSelector['objectSize'].nSigmaClip=2.0
+
+# List of flags which cause a source to be rejected as bad
+config.sourceSelector['objectSize'].badFlags=['base_PixelFlags_flag_edge', 'base_PixelFlags_flag_interpolatedCenter', 'base_PixelFlags_flag_saturatedCenter', 'base_PixelFlags_flag_crCenter', 'base_PixelFlags_flag_bad', 'base_PixelFlags_flag_interpolated']
+
+# Name of a flag field that is True for Sources that should be used.
+config.sourceSelector['flagged'].field='calib_psf_used'
+
+# List of flags which cause a source to be rejected as bad
+config.sourceSelector['astrometry'].badFlags=['base_PixelFlags_flag_edge', 'base_PixelFlags_flag_interpolatedCenter', 'base_PixelFlags_flag_saturatedCenter', 'base_PixelFlags_flag_crCenter', 'base_PixelFlags_flag_bad']
+
+# Type of source flux; typically one of Ap or Psf
+config.sourceSelector['astrometry'].sourceFluxType='Ap'
+
+# Minimum allowed signal-to-noise ratio for sources used for matching (in the flux specified by sourceFluxType); <= 0 for no limit
+config.sourceSelector['astrometry'].minSnr=10.0
+
+# Type of source flux; typically one of Ap or Psf
+config.sourceSelector['matcher'].sourceFluxType='Ap'
+
+# Minimum allowed signal-to-noise ratio for sources used for matching (in the flux specified by sourceFluxType); <= 0 for no limit
+config.sourceSelector['matcher'].minSnr=40.0
+
+# Exclude objects that have saturated, interpolated, or edge pixels using PixelFlags. For matchOptimisticB set this to False to recover previous matcher selector behavior.
+config.sourceSelector['matcher'].excludePixelFlags=True
+
+config.sourceSelector.name='science'
+# Apply magnitude limit?
+config.astrometryReferenceSelector.doMagLimit=False
+
+# Apply flag limitation?
+config.astrometryReferenceSelector.doFlags=False
+
+# Apply unresolved limitation?
+config.astrometryReferenceSelector.doUnresolved=False
+
+# Apply signal-to-noise limit?
+config.astrometryReferenceSelector.doSignalToNoise=False
+
+# Apply magnitude error limit?
+config.astrometryReferenceSelector.doMagError=False
+
+# Select objects with value greater than this
+config.astrometryReferenceSelector.magLimit.minimum=None
+
+# Select objects with value less than this
+config.astrometryReferenceSelector.magLimit.maximum=None
+
+# Name of the source flux field to use.
+config.astrometryReferenceSelector.magLimit.fluxField='flux'
+
+# List of source flag fields that must be set for a source to be used.
+config.astrometryReferenceSelector.flags.good=[]
+
+# List of source flag fields that must NOT be set for a source to be used.
+config.astrometryReferenceSelector.flags.bad=[]
+
+# Select objects with value greater than this
+config.astrometryReferenceSelector.unresolved.minimum=None
+
+# Select objects with value less than this
+config.astrometryReferenceSelector.unresolved.maximum=0.5
+
+# Name of column for star/galaxy separation
+config.astrometryReferenceSelector.unresolved.name='base_ClassificationExtendedness_value'
+
+# Select objects with value greater than this
+config.astrometryReferenceSelector.signalToNoise.minimum=None
+
+# Select objects with value less than this
+config.astrometryReferenceSelector.signalToNoise.maximum=None
+
+# Name of the source flux field to use.
+config.astrometryReferenceSelector.signalToNoise.fluxField='flux'
+
+# Name of the source flux error field to use.
+config.astrometryReferenceSelector.signalToNoise.errField='flux_err'
+
+# Select objects with value greater than this
+config.astrometryReferenceSelector.magError.minimum=None
+
+# Select objects with value less than this
+config.astrometryReferenceSelector.magError.maximum=None
+
+# Name of the source flux error field to use.
+config.astrometryReferenceSelector.magError.magErrField='mag_err'
+
+config.astrometryReferenceSelector.colorLimits={}
+# Apply magnitude limit?
+config.photometryReferenceSelector.doMagLimit=False
+
+# Apply flag limitation?
+config.photometryReferenceSelector.doFlags=False
+
+# Apply unresolved limitation?
+config.photometryReferenceSelector.doUnresolved=False
+
+# Apply signal-to-noise limit?
+config.photometryReferenceSelector.doSignalToNoise=False
+
+# Apply magnitude error limit?
+config.photometryReferenceSelector.doMagError=False
+
+# Select objects with value greater than this
+config.photometryReferenceSelector.magLimit.minimum=None
+
+# Select objects with value less than this
+config.photometryReferenceSelector.magLimit.maximum=None
+
+# Name of the source flux field to use.
+config.photometryReferenceSelector.magLimit.fluxField='flux'
+
+# List of source flag fields that must be set for a source to be used.
+config.photometryReferenceSelector.flags.good=[]
+
+# List of source flag fields that must NOT be set for a source to be used.
+config.photometryReferenceSelector.flags.bad=[]
+
+# Select objects with value greater than this
+config.photometryReferenceSelector.unresolved.minimum=None
+
+# Select objects with value less than this
+config.photometryReferenceSelector.unresolved.maximum=0.5
+
+# Name of column for star/galaxy separation
+config.photometryReferenceSelector.unresolved.name='base_ClassificationExtendedness_value'
+
+# Select objects with value greater than this
+config.photometryReferenceSelector.signalToNoise.minimum=None
+
+# Select objects with value less than this
+config.photometryReferenceSelector.signalToNoise.maximum=None
+
+# Name of the source flux field to use.
+config.photometryReferenceSelector.signalToNoise.fluxField='flux'
+
+# Name of the source flux error field to use.
+config.photometryReferenceSelector.signalToNoise.errField='flux_err'
+
+# Select objects with value greater than this
+config.photometryReferenceSelector.magError.minimum=None
+
+# Select objects with value less than this
+config.photometryReferenceSelector.magError.maximum=None
+
+# Name of the source flux error field to use.
+config.photometryReferenceSelector.magError.magErrField='mag_err'
+
+config.photometryReferenceSelector.colorLimits={}
+# Uncertainty on reference catalog coordinates [mas] to use in place of the `coord_*Err` fields. If None, then raise an exception if the reference catalog is missing coordinate errors. If specified, overrides any existing `coord_*Err` values.
+config.astrometryReferenceErr=10.0
+
+# Write the pre/post-initialization Hessian and gradient to text files, for debugging.The output files will be of the form 'astrometry_preinit-mat.txt', in the current directory.Note that these files are the dense versions of the matrix, and so may be very large.
+config.writeInitMatrix=False
+
+# Write .csv files containing the contributions to chi2 for the initialization and final fit.
+config.writeChi2FilesInitialFinal=False
+
+# Write .csv files containing the contributions to chi2 for the outer fit loop.
+config.writeChi2FilesOuterLoop=False
+
+# Source flux field to use in source selection and to get fluxes from the catalog.
+config.sourceFluxType='Calib'
+

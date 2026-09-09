@@ -1,0 +1,772 @@
+import lsst.pipe.tasks.assembleCoadd
+assert type(config)==lsst.pipe.tasks.assembleCoadd.CompareWarpAssembleCoaddConfig, 'config is of type %s.%s instead of lsst.pipe.tasks.assembleCoadd.CompareWarpAssembleCoaddConfig' % (type(config).__module__, type(config).__name__)
+import lsst.meas.algorithms.gaussianPsfFactory
+import lsst.pipe.tasks.scaleVariance
+import lsst.pipe.tasks.coaddInputRecorder
+import lsst.meas.algorithms.subtractBackground
+import lsst.pex.config.config
+import lsst.pipe.tasks.interpImage
+import lsst.pipe.tasks.scaleZeroPoint
+import lsst.pipe.tasks.selectImages
+import lsst.meas.algorithms.coaddPsf.coaddPsf
+import lsst.pipe.base.config
+import lsst.meas.algorithms.detection
+# Coadd name: typically one of deep or goodSeeing.
+config.coaddName='deep'
+
+# Mask planes that, if set, the associated pixel should not be included in the coaddTempExp.
+config.badMaskPlanes=['NO_DATA', 'BAD', 'SAT']
+
+# Add records for CCDs we iterated over but did not add a coaddTempExp due to a lack of unmasked pixels in the coadd footprint.
+config.inputRecorder.saveEmptyCcds=False
+
+# Add records for CCDs we iterated over but did not add a coaddTempExp due to an exception (often due to the calexp not being found on disk).
+config.inputRecorder.saveErrorCcds=False
+
+# Save the total number of good pixels in each coaddTempExp (redundant with a sum of good pixels in associated CCDs)
+config.inputRecorder.saveVisitGoodPix=True
+
+# Save weights in the CCDs table as well as the visits table? (This is necessary for easy construction of CoaddPsf, but otherwise duplicate information.)
+config.inputRecorder.saveCcdWeights=True
+
+# Match to modelPsf? Deprecated. Sets makePsfMatched=True, makeDirect=False
+config.doPsfMatch=False
+
+# Kernel size (width and height) (pixels); if None then sizeFactor is used
+config.modelPsf.size=None
+
+# Kernel size as a factor of fwhm (dimensionless); size = sizeFactor * fwhm; ignored if size is not None
+config.modelPsf.sizeFactor=3.0
+
+# Minimum kernel size if using sizeFactor (pixels); ignored if size is not None
+config.modelPsf.minSize=5
+
+# Maximum kernel size if using sizeFactor (pixels); ignored if size is not None
+config.modelPsf.maxSize=None
+
+# Default FWHM of Gaussian model of core of star (pixels)
+config.modelPsf.defaultFwhm=3.0
+
+# Add a Gaussian to represent wings?
+config.modelPsf.addWing=True
+
+# wing width, as a multiple of core width (dimensionless); ignored if addWing false
+config.modelPsf.wingFwhmFactor=2.5
+
+# wing amplitude, as a multiple of core amplitude (dimensionless); ignored if addWing false
+config.modelPsf.wingAmplitude=0.1
+
+# Apply jointcal WCS and PhotoCalib results to input calexps?
+config.doApplyUberCal=False
+
+# Use meas_mosaic's applyMosaicResultsExposure() to do the photometric calibration/wcs update (deprecated).
+config.useMeasMosaic=False
+
+# Add photometric calibration variance to warp variance plane.
+config.includeCalibVar=False
+
+# Size in pixels of matching kernel. Must be odd.
+config.matchingKernelSize=21
+
+# Warp name: one of 'direct' or 'psfMatched'
+config.warpType='direct'
+
+# Width, height of stack subregion size; make small enough that a full stack of images will fit into memory at once.
+config.subregionSize=[2000, 2000]
+
+# Main stacking statistic for aggregating over the epochs.
+config.statistic='MEAN'
+
+# Perform sigma clipped outlier rejection with MEANCLIP statistic? (DEPRECATED)
+config.doSigmaClip=False
+
+# Sigma for outlier rejection; ignored if non-clipping statistic selected.
+config.sigmaClip=3.0
+
+# Number of iterations of outlier rejection; ignored if non-clipping statistic selected.
+config.clipIter=2
+
+# Calculate coadd variance from input variance by stacking statistic.Passed to StatisticsControl.setCalcErrorFromInputVariance()
+config.calcErrorFromInputVariance=True
+
+# desired photometric zero point
+config.scaleZeroPoint.zeroPoint=27.0
+
+# Interpolate over NaN pixels? Also extrapolate, if necessary, but the results are ugly.
+config.doInterp=True
+
+# Kernel size (width and height) (pixels); if None then sizeFactor is used
+config.interpImage.modelPsf.size=None
+
+# Kernel size as a factor of fwhm (dimensionless); size = sizeFactor * fwhm; ignored if size is not None
+config.interpImage.modelPsf.sizeFactor=3.0
+
+# Minimum kernel size if using sizeFactor (pixels); ignored if size is not None
+config.interpImage.modelPsf.minSize=5
+
+# Maximum kernel size if using sizeFactor (pixels); ignored if size is not None
+config.interpImage.modelPsf.maxSize=None
+
+# Default FWHM of Gaussian model of core of star (pixels)
+config.interpImage.modelPsf.defaultFwhm=3.0
+
+# Add a Gaussian to represent wings?
+config.interpImage.modelPsf.addWing=True
+
+# wing width, as a multiple of core width (dimensionless); ignored if addWing false
+config.interpImage.modelPsf.wingFwhmFactor=2.5
+
+# wing amplitude, as a multiple of core amplitude (dimensionless); ignored if addWing false
+config.interpImage.modelPsf.wingAmplitude=0.1
+
+# Smoothly taper to the fallback value at the edge of the image?
+config.interpImage.useFallbackValueAtEdge=True
+
+# Type of statistic to calculate edge fallbackValue for interpolation
+config.interpImage.fallbackValueType='MEDIAN'
+
+# If fallbackValueType is 'USER' then use this as the fallbackValue; ignored otherwise
+config.interpImage.fallbackUserValue=0.0
+
+# Allow negative values for egde interpolation fallbackValue?  If False, set fallbackValue to max(fallbackValue, 0.0)
+config.interpImage.negativeFallbackAllowed=False
+
+# Transpose image before interpolating? This allows the interpolation to act over columns instead of rows.
+config.interpImage.transpose=False
+
+# Persist coadd?
+config.doWrite=True
+
+# Create image of number of contributing exposures for each pixel
+config.doNImage=False
+
+# Use ValidPolygons from shrunk Psf-Matched Calexps? Should be set to True by CompareWarp only.
+config.doUsePsfMatchedPolygons=True
+
+# Threshold (in fractional weight) of rejection at which we propagate a mask plane to the coadd; that is, we set the mask bit on the coadd if the fraction the rejected frames would have contributed exceeds this value.
+config.maskPropagationThresholds={'SAT': 0.1}
+
+# Mask planes to remove before coadding
+config.removeMaskPlanes=['NOT_DEBLENDED', 'EDGE']
+
+# Set mask and flag bits for bright objects?
+config.doMaskBrightObjects=False
+
+# Name of mask bit used for bright objects
+config.brightObjectMaskName='BRIGHT_OBJECT'
+
+# Warping kernel cache size
+config.coaddPsf.cacheSize=10000
+
+# Name of warping kernel; choices: lanczos3,lanczos4,lanczos5,bilinear,nearest
+config.coaddPsf.warpingKernelName='lanczos5'
+
+# Attach a piecewise TransmissionCurve for the coadd? (requires all input Exposures to have TransmissionCurves).
+config.doAttachTransmissionCurve=False
+
+# Should be set to True if fake sources have been inserted into the input data.
+config.hasFakes=False
+
+# name for connection inputWarps
+config.connections.inputWarps='{inputCoaddName}Coadd_{warpType}Warp'
+
+# name for connection skyMap
+config.connections.skyMap='{inputCoaddName}Coadd_skyMap'
+
+# name for connection brightObjectMask
+config.connections.brightObjectMask='brightObjectMask'
+
+# name for connection coaddExposure
+config.connections.coaddExposure='{fakesType}{outputCoaddName}Coadd{warpTypeSuffix}'
+
+# name for connection nImage
+config.connections.nImage='{outputCoaddName}Coadd_nImage'
+
+# name for connection psfMatchedWarps
+config.connections.psfMatchedWarps='{inputCoaddName}Coadd_psfMatchedWarp'
+
+# name for connection templateCoadd
+config.connections.templateCoadd='{fakesType}{outputCoaddName}CoaddPsfMatched'
+
+# Template parameter used to format corresponding field template parameter
+config.connections.inputCoaddName='deep'
+
+# Template parameter used to format corresponding field template parameter
+config.connections.outputCoaddName='deep'
+
+# Template parameter used to format corresponding field template parameter
+config.connections.warpType='direct'
+
+# Template parameter used to format corresponding field template parameter
+config.connections.warpTypeSuffix=''
+
+# Template parameter used to format corresponding field template parameter
+config.connections.fakesType=''
+
+# Coadd name: typically one of deep or goodSeeing.
+config.assembleStaticSkyModel.coaddName='deep'
+
+# Mask planes that, if set, the associated pixel should not be included in the coaddTempExp.
+config.assembleStaticSkyModel.badMaskPlanes=['NO_DATA']
+
+# Add records for CCDs we iterated over but did not add a coaddTempExp due to a lack of unmasked pixels in the coadd footprint.
+config.assembleStaticSkyModel.inputRecorder.saveEmptyCcds=False
+
+# Add records for CCDs we iterated over but did not add a coaddTempExp due to an exception (often due to the calexp not being found on disk).
+config.assembleStaticSkyModel.inputRecorder.saveErrorCcds=False
+
+# Save the total number of good pixels in each coaddTempExp (redundant with a sum of good pixels in associated CCDs)
+config.assembleStaticSkyModel.inputRecorder.saveVisitGoodPix=True
+
+# Save weights in the CCDs table as well as the visits table? (This is necessary for easy construction of CoaddPsf, but otherwise duplicate information.)
+config.assembleStaticSkyModel.inputRecorder.saveCcdWeights=True
+
+# Match to modelPsf? Deprecated. Sets makePsfMatched=True, makeDirect=False
+config.assembleStaticSkyModel.doPsfMatch=False
+
+# Kernel size (width and height) (pixels); if None then sizeFactor is used
+config.assembleStaticSkyModel.modelPsf.size=None
+
+# Kernel size as a factor of fwhm (dimensionless); size = sizeFactor * fwhm; ignored if size is not None
+config.assembleStaticSkyModel.modelPsf.sizeFactor=3.0
+
+# Minimum kernel size if using sizeFactor (pixels); ignored if size is not None
+config.assembleStaticSkyModel.modelPsf.minSize=5
+
+# Maximum kernel size if using sizeFactor (pixels); ignored if size is not None
+config.assembleStaticSkyModel.modelPsf.maxSize=None
+
+# Default FWHM of Gaussian model of core of star (pixels)
+config.assembleStaticSkyModel.modelPsf.defaultFwhm=3.0
+
+# Add a Gaussian to represent wings?
+config.assembleStaticSkyModel.modelPsf.addWing=True
+
+# wing width, as a multiple of core width (dimensionless); ignored if addWing false
+config.assembleStaticSkyModel.modelPsf.wingFwhmFactor=2.5
+
+# wing amplitude, as a multiple of core amplitude (dimensionless); ignored if addWing false
+config.assembleStaticSkyModel.modelPsf.wingAmplitude=0.1
+
+# Apply jointcal WCS and PhotoCalib results to input calexps?
+config.assembleStaticSkyModel.doApplyUberCal=False
+
+# Use meas_mosaic's applyMosaicResultsExposure() to do the photometric calibration/wcs update (deprecated).
+config.assembleStaticSkyModel.useMeasMosaic=False
+
+# Add photometric calibration variance to warp variance plane.
+config.assembleStaticSkyModel.includeCalibVar=False
+
+# Size in pixels of matching kernel. Must be odd.
+config.assembleStaticSkyModel.matchingKernelSize=21
+
+# Warp name: one of 'direct' or 'psfMatched'
+config.assembleStaticSkyModel.warpType='psfMatched'
+
+# Width, height of stack subregion size; make small enough that a full stack of images will fit into memory at once.
+config.assembleStaticSkyModel.subregionSize=[2000, 2000]
+
+# Main stacking statistic for aggregating over the epochs.
+config.assembleStaticSkyModel.statistic='MEANCLIP'
+
+# Perform sigma clipped outlier rejection with MEANCLIP statistic? (DEPRECATED)
+config.assembleStaticSkyModel.doSigmaClip=False
+
+# Sigma for outlier rejection; ignored if non-clipping statistic selected.
+config.assembleStaticSkyModel.sigmaClip=2.5
+
+# Number of iterations of outlier rejection; ignored if non-clipping statistic selected.
+config.assembleStaticSkyModel.clipIter=3
+
+# Calculate coadd variance from input variance by stacking statistic.Passed to StatisticsControl.setCalcErrorFromInputVariance()
+config.assembleStaticSkyModel.calcErrorFromInputVariance=False
+
+# desired photometric zero point
+config.assembleStaticSkyModel.scaleZeroPoint.zeroPoint=27.0
+
+# Interpolate over NaN pixels? Also extrapolate, if necessary, but the results are ugly.
+config.assembleStaticSkyModel.doInterp=True
+
+# Kernel size (width and height) (pixels); if None then sizeFactor is used
+config.assembleStaticSkyModel.interpImage.modelPsf.size=None
+
+# Kernel size as a factor of fwhm (dimensionless); size = sizeFactor * fwhm; ignored if size is not None
+config.assembleStaticSkyModel.interpImage.modelPsf.sizeFactor=3.0
+
+# Minimum kernel size if using sizeFactor (pixels); ignored if size is not None
+config.assembleStaticSkyModel.interpImage.modelPsf.minSize=5
+
+# Maximum kernel size if using sizeFactor (pixels); ignored if size is not None
+config.assembleStaticSkyModel.interpImage.modelPsf.maxSize=None
+
+# Default FWHM of Gaussian model of core of star (pixels)
+config.assembleStaticSkyModel.interpImage.modelPsf.defaultFwhm=3.0
+
+# Add a Gaussian to represent wings?
+config.assembleStaticSkyModel.interpImage.modelPsf.addWing=True
+
+# wing width, as a multiple of core width (dimensionless); ignored if addWing false
+config.assembleStaticSkyModel.interpImage.modelPsf.wingFwhmFactor=2.5
+
+# wing amplitude, as a multiple of core amplitude (dimensionless); ignored if addWing false
+config.assembleStaticSkyModel.interpImage.modelPsf.wingAmplitude=0.1
+
+# Smoothly taper to the fallback value at the edge of the image?
+config.assembleStaticSkyModel.interpImage.useFallbackValueAtEdge=True
+
+# Type of statistic to calculate edge fallbackValue for interpolation
+config.assembleStaticSkyModel.interpImage.fallbackValueType='MEDIAN'
+
+# If fallbackValueType is 'USER' then use this as the fallbackValue; ignored otherwise
+config.assembleStaticSkyModel.interpImage.fallbackUserValue=0.0
+
+# Allow negative values for egde interpolation fallbackValue?  If False, set fallbackValue to max(fallbackValue, 0.0)
+config.assembleStaticSkyModel.interpImage.negativeFallbackAllowed=False
+
+# Transpose image before interpolating? This allows the interpolation to act over columns instead of rows.
+config.assembleStaticSkyModel.interpImage.transpose=False
+
+# Persist coadd?
+config.assembleStaticSkyModel.doWrite=False
+
+# Create image of number of contributing exposures for each pixel
+config.assembleStaticSkyModel.doNImage=False
+
+# Use ValidPolygons from shrunk Psf-Matched Calexps? Should be set to True by CompareWarp only.
+config.assembleStaticSkyModel.doUsePsfMatchedPolygons=False
+
+# Threshold (in fractional weight) of rejection at which we propagate a mask plane to the coadd; that is, we set the mask bit on the coadd if the fraction the rejected frames would have contributed exceeds this value.
+config.assembleStaticSkyModel.maskPropagationThresholds={'SAT': 0.1}
+
+# Mask planes to remove before coadding
+config.assembleStaticSkyModel.removeMaskPlanes=['NOT_DEBLENDED']
+
+# Set mask and flag bits for bright objects?
+config.assembleStaticSkyModel.doMaskBrightObjects=False
+
+# Name of mask bit used for bright objects
+config.assembleStaticSkyModel.brightObjectMaskName='BRIGHT_OBJECT'
+
+# Warping kernel cache size
+config.assembleStaticSkyModel.coaddPsf.cacheSize=10000
+
+# Name of warping kernel; choices: lanczos3,lanczos4,lanczos5,bilinear,nearest
+config.assembleStaticSkyModel.coaddPsf.warpingKernelName='lanczos5'
+
+# Attach a piecewise TransmissionCurve for the coadd? (requires all input Exposures to have TransmissionCurves).
+config.assembleStaticSkyModel.doAttachTransmissionCurve=False
+
+# Should be set to True if fake sources have been inserted into the input data.
+config.assembleStaticSkyModel.hasFakes=False
+
+# name for connection inputWarps
+config.assembleStaticSkyModel.connections.inputWarps='{inputCoaddName}Coadd_{warpType}Warp'
+
+# name for connection skyMap
+config.assembleStaticSkyModel.connections.skyMap='{inputCoaddName}Coadd_skyMap'
+
+# name for connection brightObjectMask
+config.assembleStaticSkyModel.connections.brightObjectMask='brightObjectMask'
+
+# name for connection coaddExposure
+config.assembleStaticSkyModel.connections.coaddExposure='{fakesType}{outputCoaddName}Coadd{warpTypeSuffix}'
+
+# name for connection nImage
+config.assembleStaticSkyModel.connections.nImage='{outputCoaddName}Coadd_nImage'
+
+# Template parameter used to format corresponding field template parameter
+config.assembleStaticSkyModel.connections.inputCoaddName='deep'
+
+# Template parameter used to format corresponding field template parameter
+config.assembleStaticSkyModel.connections.outputCoaddName='deep'
+
+# Template parameter used to format corresponding field template parameter
+config.assembleStaticSkyModel.connections.warpType='psfMatched'
+
+# Template parameter used to format corresponding field template parameter
+config.assembleStaticSkyModel.connections.warpTypeSuffix=''
+
+# Template parameter used to format corresponding field template parameter
+config.assembleStaticSkyModel.connections.fakesType=''
+
+# detected sources with fewer than the specified number of pixels will be ignored
+config.detect.minPixels=4
+
+# Pixels should be grown as isotropically as possible (slower)
+config.detect.isotropicGrow=True
+
+# Grow all footprints at the same time? This allows disconnected footprints to merge.
+config.detect.combinedGrow=True
+
+# Grow detections by nSigmaToGrow * [PSF RMS width]; if 0 then do not grow
+config.detect.nSigmaToGrow=0.4
+
+# Grow detections to set the image mask bits, but return the original (not-grown) footprints
+config.detect.returnOriginalFootprints=False
+
+# Threshold for footprints; exact meaning and units depend on thresholdType.
+config.detect.thresholdValue=5.0
+
+# Include threshold relative to thresholdValue
+config.detect.includeThresholdMultiplier=1.0
+
+# specifies the desired flavor of Threshold
+config.detect.thresholdType='pixel_stdev'
+
+# specifies whether to detect positive, or negative sources, or both
+config.detect.thresholdPolarity='both'
+
+# Fiddle factor to add to the background; debugging only
+config.detect.adjustBackground=0.0
+
+# Estimate the background again after final source detection?
+config.detect.reEstimateBackground=False
+
+# type of statistic to use for grid points
+config.detect.background.statisticsProperty='MEANCLIP'
+
+# behaviour if there are too few points in grid for requested interpolation style
+config.detect.background.undersampleStyle='REDUCE_INTERP_ORDER'
+
+# how large a region of the sky should be used for each background point
+config.detect.background.binSize=128
+
+# Sky region size to be used for each background point in X direction. If 0, the binSize config is used.
+config.detect.background.binSizeX=0
+
+# Sky region size to be used for each background point in Y direction. If 0, the binSize config is used.
+config.detect.background.binSizeY=0
+
+# how to interpolate the background values. This maps to an enum; see afw::math::Background
+config.detect.background.algorithm='AKIMA_SPLINE'
+
+# Names of mask planes to ignore while estimating the background
+config.detect.background.ignoredPixelMask=['BAD', 'EDGE', 'DETECTED', 'DETECTED_NEGATIVE', 'NO_DATA']
+
+# Ignore NaNs when estimating the background
+config.detect.background.isNanSafe=False
+
+# Use Approximate (Chebyshev) to model background.
+config.detect.background.useApprox=True
+
+# Approximation order in X for background Chebyshev (valid only with useApprox=True)
+config.detect.background.approxOrderX=6
+
+# Approximation order in Y for background Chebyshev (valid only with useApprox=True)
+config.detect.background.approxOrderY=-1
+
+# Use inverse variance weighting in calculation (valid only with useApprox=True)
+config.detect.background.weighting=True
+
+# type of statistic to use for grid points
+config.detect.tempLocalBackground.statisticsProperty='MEANCLIP'
+
+# behaviour if there are too few points in grid for requested interpolation style
+config.detect.tempLocalBackground.undersampleStyle='REDUCE_INTERP_ORDER'
+
+# how large a region of the sky should be used for each background point
+config.detect.tempLocalBackground.binSize=64
+
+# Sky region size to be used for each background point in X direction. If 0, the binSize config is used.
+config.detect.tempLocalBackground.binSizeX=0
+
+# Sky region size to be used for each background point in Y direction. If 0, the binSize config is used.
+config.detect.tempLocalBackground.binSizeY=0
+
+# how to interpolate the background values. This maps to an enum; see afw::math::Background
+config.detect.tempLocalBackground.algorithm='AKIMA_SPLINE'
+
+# Names of mask planes to ignore while estimating the background
+config.detect.tempLocalBackground.ignoredPixelMask=['BAD', 'EDGE', 'DETECTED', 'DETECTED_NEGATIVE', 'NO_DATA']
+
+# Ignore NaNs when estimating the background
+config.detect.tempLocalBackground.isNanSafe=False
+
+# Use Approximate (Chebyshev) to model background.
+config.detect.tempLocalBackground.useApprox=False
+
+# Approximation order in X for background Chebyshev (valid only with useApprox=True)
+config.detect.tempLocalBackground.approxOrderX=6
+
+# Approximation order in Y for background Chebyshev (valid only with useApprox=True)
+config.detect.tempLocalBackground.approxOrderY=-1
+
+# Use inverse variance weighting in calculation (valid only with useApprox=True)
+config.detect.tempLocalBackground.weighting=True
+
+# Enable temporary local background subtraction? (see tempLocalBackground)
+config.detect.doTempLocalBackground=False
+
+# type of statistic to use for grid points
+config.detect.tempWideBackground.statisticsProperty='MEANCLIP'
+
+# behaviour if there are too few points in grid for requested interpolation style
+config.detect.tempWideBackground.undersampleStyle='REDUCE_INTERP_ORDER'
+
+# how large a region of the sky should be used for each background point
+config.detect.tempWideBackground.binSize=512
+
+# Sky region size to be used for each background point in X direction. If 0, the binSize config is used.
+config.detect.tempWideBackground.binSizeX=0
+
+# Sky region size to be used for each background point in Y direction. If 0, the binSize config is used.
+config.detect.tempWideBackground.binSizeY=0
+
+# how to interpolate the background values. This maps to an enum; see afw::math::Background
+config.detect.tempWideBackground.algorithm='AKIMA_SPLINE'
+
+# Names of mask planes to ignore while estimating the background
+config.detect.tempWideBackground.ignoredPixelMask=['BAD', 'EDGE', 'NO_DATA']
+
+# Ignore NaNs when estimating the background
+config.detect.tempWideBackground.isNanSafe=False
+
+# Use Approximate (Chebyshev) to model background.
+config.detect.tempWideBackground.useApprox=False
+
+# Approximation order in X for background Chebyshev (valid only with useApprox=True)
+config.detect.tempWideBackground.approxOrderX=6
+
+# Approximation order in Y for background Chebyshev (valid only with useApprox=True)
+config.detect.tempWideBackground.approxOrderY=-1
+
+# Use inverse variance weighting in calculation (valid only with useApprox=True)
+config.detect.tempWideBackground.weighting=True
+
+# Do temporary wide (large-scale) background subtraction before footprint detection?
+config.detect.doTempWideBackground=False
+
+# The maximum number of peaks in a Footprint before trying to replace its peaks using the temporary local background
+config.detect.nPeaksMaxSimple=1
+
+# Multiple of PSF RMS size to use for convolution kernel bounding box size; note that this is not a half-size. The size will be rounded up to the nearest odd integer
+config.detect.nSigmaForKernel=7.0
+
+# Mask planes to ignore when calculating statistics of image (for thresholdType=stdev)
+config.detect.statsMask=['BAD', 'SAT', 'EDGE', 'NO_DATA']
+
+# detected sources with fewer than the specified number of pixels will be ignored
+config.detectTemplate.minPixels=1
+
+# Pixels should be grown as isotropically as possible (slower)
+config.detectTemplate.isotropicGrow=False
+
+# Grow all footprints at the same time? This allows disconnected footprints to merge.
+config.detectTemplate.combinedGrow=True
+
+# Grow detections by nSigmaToGrow * [PSF RMS width]; if 0 then do not grow
+config.detectTemplate.nSigmaToGrow=2.4
+
+# Grow detections to set the image mask bits, but return the original (not-grown) footprints
+config.detectTemplate.returnOriginalFootprints=False
+
+# Threshold for footprints; exact meaning and units depend on thresholdType.
+config.detectTemplate.thresholdValue=5.0
+
+# Include threshold relative to thresholdValue
+config.detectTemplate.includeThresholdMultiplier=1.0
+
+# specifies the desired flavor of Threshold
+config.detectTemplate.thresholdType='stdev'
+
+# specifies whether to detect positive, or negative sources, or both
+config.detectTemplate.thresholdPolarity='positive'
+
+# Fiddle factor to add to the background; debugging only
+config.detectTemplate.adjustBackground=0.0
+
+# Estimate the background again after final source detection?
+config.detectTemplate.reEstimateBackground=False
+
+# type of statistic to use for grid points
+config.detectTemplate.background.statisticsProperty='MEANCLIP'
+
+# behaviour if there are too few points in grid for requested interpolation style
+config.detectTemplate.background.undersampleStyle='REDUCE_INTERP_ORDER'
+
+# how large a region of the sky should be used for each background point
+config.detectTemplate.background.binSize=128
+
+# Sky region size to be used for each background point in X direction. If 0, the binSize config is used.
+config.detectTemplate.background.binSizeX=0
+
+# Sky region size to be used for each background point in Y direction. If 0, the binSize config is used.
+config.detectTemplate.background.binSizeY=0
+
+# how to interpolate the background values. This maps to an enum; see afw::math::Background
+config.detectTemplate.background.algorithm='AKIMA_SPLINE'
+
+# Names of mask planes to ignore while estimating the background
+config.detectTemplate.background.ignoredPixelMask=['BAD', 'EDGE', 'DETECTED', 'DETECTED_NEGATIVE', 'NO_DATA']
+
+# Ignore NaNs when estimating the background
+config.detectTemplate.background.isNanSafe=False
+
+# Use Approximate (Chebyshev) to model background.
+config.detectTemplate.background.useApprox=True
+
+# Approximation order in X for background Chebyshev (valid only with useApprox=True)
+config.detectTemplate.background.approxOrderX=6
+
+# Approximation order in Y for background Chebyshev (valid only with useApprox=True)
+config.detectTemplate.background.approxOrderY=-1
+
+# Use inverse variance weighting in calculation (valid only with useApprox=True)
+config.detectTemplate.background.weighting=True
+
+# type of statistic to use for grid points
+config.detectTemplate.tempLocalBackground.statisticsProperty='MEANCLIP'
+
+# behaviour if there are too few points in grid for requested interpolation style
+config.detectTemplate.tempLocalBackground.undersampleStyle='REDUCE_INTERP_ORDER'
+
+# how large a region of the sky should be used for each background point
+config.detectTemplate.tempLocalBackground.binSize=64
+
+# Sky region size to be used for each background point in X direction. If 0, the binSize config is used.
+config.detectTemplate.tempLocalBackground.binSizeX=0
+
+# Sky region size to be used for each background point in Y direction. If 0, the binSize config is used.
+config.detectTemplate.tempLocalBackground.binSizeY=0
+
+# how to interpolate the background values. This maps to an enum; see afw::math::Background
+config.detectTemplate.tempLocalBackground.algorithm='AKIMA_SPLINE'
+
+# Names of mask planes to ignore while estimating the background
+config.detectTemplate.tempLocalBackground.ignoredPixelMask=['BAD', 'EDGE', 'DETECTED', 'DETECTED_NEGATIVE', 'NO_DATA']
+
+# Ignore NaNs when estimating the background
+config.detectTemplate.tempLocalBackground.isNanSafe=False
+
+# Use Approximate (Chebyshev) to model background.
+config.detectTemplate.tempLocalBackground.useApprox=False
+
+# Approximation order in X for background Chebyshev (valid only with useApprox=True)
+config.detectTemplate.tempLocalBackground.approxOrderX=6
+
+# Approximation order in Y for background Chebyshev (valid only with useApprox=True)
+config.detectTemplate.tempLocalBackground.approxOrderY=-1
+
+# Use inverse variance weighting in calculation (valid only with useApprox=True)
+config.detectTemplate.tempLocalBackground.weighting=True
+
+# Enable temporary local background subtraction? (see tempLocalBackground)
+config.detectTemplate.doTempLocalBackground=False
+
+# type of statistic to use for grid points
+config.detectTemplate.tempWideBackground.statisticsProperty='MEANCLIP'
+
+# behaviour if there are too few points in grid for requested interpolation style
+config.detectTemplate.tempWideBackground.undersampleStyle='REDUCE_INTERP_ORDER'
+
+# how large a region of the sky should be used for each background point
+config.detectTemplate.tempWideBackground.binSize=512
+
+# Sky region size to be used for each background point in X direction. If 0, the binSize config is used.
+config.detectTemplate.tempWideBackground.binSizeX=0
+
+# Sky region size to be used for each background point in Y direction. If 0, the binSize config is used.
+config.detectTemplate.tempWideBackground.binSizeY=0
+
+# how to interpolate the background values. This maps to an enum; see afw::math::Background
+config.detectTemplate.tempWideBackground.algorithm='AKIMA_SPLINE'
+
+# Names of mask planes to ignore while estimating the background
+config.detectTemplate.tempWideBackground.ignoredPixelMask=['BAD', 'EDGE', 'NO_DATA']
+
+# Ignore NaNs when estimating the background
+config.detectTemplate.tempWideBackground.isNanSafe=False
+
+# Use Approximate (Chebyshev) to model background.
+config.detectTemplate.tempWideBackground.useApprox=False
+
+# Approximation order in X for background Chebyshev (valid only with useApprox=True)
+config.detectTemplate.tempWideBackground.approxOrderX=6
+
+# Approximation order in Y for background Chebyshev (valid only with useApprox=True)
+config.detectTemplate.tempWideBackground.approxOrderY=-1
+
+# Use inverse variance weighting in calculation (valid only with useApprox=True)
+config.detectTemplate.tempWideBackground.weighting=True
+
+# Do temporary wide (large-scale) background subtraction before footprint detection?
+config.detectTemplate.doTempWideBackground=False
+
+# The maximum number of peaks in a Footprint before trying to replace its peaks using the temporary local background
+config.detectTemplate.nPeaksMaxSimple=1
+
+# Multiple of PSF RMS size to use for convolution kernel bounding box size; note that this is not a half-size. The size will be rounded up to the nearest odd integer
+config.detectTemplate.nSigmaForKernel=7.0
+
+# Mask planes to ignore when calculating statistics of image (for thresholdType=stdev)
+config.detectTemplate.statsMask=['BAD', 'SAT', 'EDGE', 'NO_DATA']
+
+# Charactistic maximum local number of epochs/visits in which an artifact candidate can appear  and still be masked.  The effective maxNumEpochs is a broken linear function of local number of epochs (N): min(maxFractionEpochsLow*N, maxNumEpochs + maxFractionEpochsHigh*N). For each footprint detected on the image difference between the psfMatched warp and static sky model, if a significant fraction of pixels (defined by spatialThreshold) are residuals in more than the computed effective maxNumEpochs, the artifact candidate is deemed persistant rather than transient and not masked.
+config.maxNumEpochs=2
+
+# Fraction of local number of epochs (N) to use as effective maxNumEpochs for low N. Effective maxNumEpochs = min(maxFractionEpochsLow * N, maxNumEpochs + maxFractionEpochsHigh * N)
+config.maxFractionEpochsLow=0.4
+
+# Fraction of local number of epochs (N) to use as effective maxNumEpochs for high N. Effective maxNumEpochs = min(maxFractionEpochsLow * N, maxNumEpochs + maxFractionEpochsHigh * N)
+config.maxFractionEpochsHigh=0.03
+
+# Unitless fraction of pixels defining how much of the outlier region has to meet the temporal criteria. If 0, clip all. If 1, clip none.
+config.spatialThreshold=0.5
+
+# Rescale Warp variance plane using empirical noise?
+config.doScaleWarpVariance=True
+
+# type of statistic to use for grid points
+config.scaleWarpVariance.background.statisticsProperty='MEANCLIP'
+
+# behaviour if there are too few points in grid for requested interpolation style
+config.scaleWarpVariance.background.undersampleStyle='REDUCE_INTERP_ORDER'
+
+# how large a region of the sky should be used for each background point
+config.scaleWarpVariance.background.binSize=32
+
+# Sky region size to be used for each background point in X direction. If 0, the binSize config is used.
+config.scaleWarpVariance.background.binSizeX=0
+
+# Sky region size to be used for each background point in Y direction. If 0, the binSize config is used.
+config.scaleWarpVariance.background.binSizeY=0
+
+# how to interpolate the background values. This maps to an enum; see afw::math::Background
+config.scaleWarpVariance.background.algorithm='AKIMA_SPLINE'
+
+# Names of mask planes to ignore while estimating the background
+config.scaleWarpVariance.background.ignoredPixelMask=['DETECTED', 'DETECTED_NEGATIVE', 'BAD', 'SAT', 'NO_DATA', 'INTRP']
+
+# Ignore NaNs when estimating the background
+config.scaleWarpVariance.background.isNanSafe=False
+
+# Use Approximate (Chebyshev) to model background.
+config.scaleWarpVariance.background.useApprox=False
+
+# Approximation order in X for background Chebyshev (valid only with useApprox=True)
+config.scaleWarpVariance.background.approxOrderX=6
+
+# Approximation order in Y for background Chebyshev (valid only with useApprox=True)
+config.scaleWarpVariance.background.approxOrderY=-1
+
+# Use inverse variance weighting in calculation (valid only with useApprox=True)
+config.scaleWarpVariance.background.weighting=True
+
+# Mask planes for pixels to ignore when scaling variance
+config.scaleWarpVariance.maskPlanes=['DETECTED', 'DETECTED_NEGATIVE', 'BAD', 'SAT', 'NO_DATA', 'INTRP']
+
+# Maximum variance scaling value to permit
+config.scaleWarpVariance.limit=10.0
+
+# Rescue artifacts from clipping that completely lie within a footprint detectedon the PsfMatched Template Coadd. Replicates a behavior of SafeClip.
+config.doPreserveContainedBySource=True
+
+# Ignore artifact candidates that are mostly covered by the bad pixel mask, because they will be excluded anyway. This prevents them from contributing to the outlier epoch count image and potentially being labeled as persistant.'Mostly' is defined by the config 'prefilterArtifactsRatio'.
+config.doPrefilterArtifacts=True
+
+# Prefilter artifact candidates that are mostly covered by these bad mask planes.
+config.prefilterArtifactsMaskPlanes=['NO_DATA', 'BAD', 'SAT', 'SUSPECT']
+
+# Prefilter artifact candidates with less than this fraction overlapping good pixels
+config.prefilterArtifactsRatio=0.05
+

@@ -1,0 +1,11 @@
+{
+  "lovoccs": {
+    "commit": "132bcb20c966ef2d0c7b93ce5d46f9a52f3f12c4",
+    "origin": "https://github.com/astroenglert/lovoccs_pipe.git",
+    "status": ""
+  },
+  "obs_cfht_author_reported_commit": "549c8174caa0f697f3f83d3bd6ff8349d2df08de",
+  "obs_cfht_commit_status": "Author supplied; compare against the persisted package versions. Historical source checkout not available in the migrated data directories.",
+  "original_reduction": "LSST Science Pipelines 19.0.0 (Gen2)",
+  "qc_revision_environment": "LSST 26.0.0 was used only to read existing Gen2 FITS catalogs for the 2026 all-visit QC revision."
+}

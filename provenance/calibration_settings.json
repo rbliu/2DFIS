@@ -1,0 +1,580 @@
+[
+  {
+    "path": "processing/ClusterRot/butler/coadd2/config/deep_compareWarpAssembleCoadd.py",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/coadd2/config/deep_compareWarpAssembleCoadd.py~1",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/coadd2/config/deep_compareWarpAssembleCoadd.py~10",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/coadd2/config/deep_compareWarpAssembleCoadd.py~11",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/coadd2/config/deep_compareWarpAssembleCoadd.py~12",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/coadd2/config/deep_compareWarpAssembleCoadd.py~2",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/coadd2/config/deep_compareWarpAssembleCoadd.py~3",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/coadd2/config/deep_compareWarpAssembleCoadd.py~4",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/coadd2/config/deep_compareWarpAssembleCoadd.py~5",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/coadd2/config/deep_compareWarpAssembleCoadd.py~6",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/coadd2/config/deep_compareWarpAssembleCoadd.py~7",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/coadd2/config/deep_compareWarpAssembleCoadd.py~8",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/coadd2/config/deep_compareWarpAssembleCoadd.py~9",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/coadd2/config/deep_makeCoaddTempExp.py",
+    "settings": {
+      "config.doApplyUberCal": true,
+      "config.makePsfMatched": true
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/jointcal/config/jointcal.py",
+    "settings": {
+      "config.applyColorTerms": false,
+      "config.astrometryRefObjLoader.ref_dataset_name": "sdss",
+      "config.photometryRefObjLoader.ref_dataset_name": "sdss"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/jointcal/config/jointcal.py~1",
+    "settings": {
+      "config.applyColorTerms": false,
+      "config.astrometryRefObjLoader.ref_dataset_name": "sdss",
+      "config.photometryRefObjLoader.ref_dataset_name": "sdss"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/jointcal/config/jointcal.py~2",
+    "settings": {
+      "config.applyColorTerms": false,
+      "config.astrometryRefObjLoader.ref_dataset_name": "sdss",
+      "config.photometryRefObjLoader.ref_dataset_name": "sdss"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/jointcal/config/jointcal.py~3",
+    "settings": {
+      "config.applyColorTerms": false,
+      "config.astrometryRefObjLoader.ref_dataset_name": "sdss",
+      "config.photometryRefObjLoader.ref_dataset_name": "sdss"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs/config/processCcd.py",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoCal.applyColorTerms": true,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs_noct/config/processCcd.py",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs_noct/config/processCcd.py~1",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs_noct/config/processCcd.py~10",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs_noct/config/processCcd.py~11",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs_noct/config/processCcd.py~12",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs_noct/config/processCcd.py~13",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs_noct/config/processCcd.py~14",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs_noct/config/processCcd.py~15",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs_noct/config/processCcd.py~2",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs_noct/config/processCcd.py~3",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs_noct/config/processCcd.py~4",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs_noct/config/processCcd.py~5",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs_noct/config/processCcd.py~6",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs_noct/config/processCcd.py~7",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs_noct/config/processCcd.py~8",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/butler/processCcdOutputs_noct/config/processCcd.py~9",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/overrides/jointcal_config.py",
+    "settings": {
+      "config.astrometryRefObjLoader.ref_dataset_name": "sdss",
+      "config.photometryRefObjLoader.ref_dataset_name": "sdss",
+      "config.applyColorTerms": false
+    }
+  },
+  {
+    "path": "processing/ClusterRot/overrides/jointcalCoaddConfig.py",
+    "settings": {
+      "config.doApplyUberCal": true
+    }
+  },
+  {
+    "path": "processing/ClusterRot/overrides/jointcalConfig_old.py",
+    "settings": {
+      "config.astrometryRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.photometryRefObjLoader.ref_dataset_name": "pan-starrs"
+    }
+  },
+  {
+    "path": "processing/ClusterRot/overrides/makeCoaddTempExp_config.py",
+    "settings": {
+      "config.doApplyUberCal": true,
+      "config.makePsfMatched": true
+    }
+  },
+  {
+    "path": "processing/ClusterRot/overrides/processCcdConfig.py",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoCal.applyColorTerms": true
+    }
+  },
+  {
+    "path": "processing/ClusterRot/overrides/processCcdConfig_old.py",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": false
+    }
+  },
+  {
+    "path": "processing/ClusterRot/overrides/processCcdConfig_u.py",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "sdss",
+      "config.calibrate.photoCal.applyColorTerms": false
+    }
+  },
+  {
+    "path": "processing/FRB/butler/coadd2/config/deep_compareWarpAssembleCoadd.py",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/FRB/butler/coadd2/config/deep_compareWarpAssembleCoadd.py~1",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/FRB/butler/coadd2/config/deep_compareWarpAssembleCoadd.py~2",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/FRB/butler/coadd2/config/deep_compareWarpAssembleCoadd.py~3",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/FRB/butler/coadd2/config/deep_makeCoaddTempExp.py",
+    "settings": {
+      "config.doApplyUberCal": true,
+      "config.makePsfMatched": true
+    }
+  },
+  {
+    "path": "processing/FRB/butler/coadd2_0325_ugri/config/deep_compareWarpAssembleCoadd.py",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/FRB/butler/coadd2_0325_ugri/config/deep_makeCoaddTempExp.py",
+    "settings": {
+      "config.doApplyUberCal": true,
+      "config.makePsfMatched": true
+    }
+  },
+  {
+    "path": "processing/FRB/butler/coadd2_0329_ugri/config/deep_compareWarpAssembleCoadd.py",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/FRB/butler/coadd2_0329_ugri/config/deep_compareWarpAssembleCoadd.py~1",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/FRB/butler/coadd2_0329_ugri/config/deep_compareWarpAssembleCoadd.py~2",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/FRB/butler/coadd2_0329_ugri/config/deep_compareWarpAssembleCoadd.py~3",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/FRB/butler/coadd2_0329_ugri/config/deep_compareWarpAssembleCoadd.py~4",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/FRB/butler/coadd2_0329_ugri/config/deep_makeCoaddTempExp.py",
+    "settings": {
+      "config.doApplyUberCal": true,
+      "config.makePsfMatched": true
+    }
+  },
+  {
+    "path": "processing/FRB/butler/coadd2_old_r/config/deep_compareWarpAssembleCoadd.py",
+    "settings": {
+      "config.doApplyUberCal": false
+    }
+  },
+  {
+    "path": "processing/FRB/butler/coadd2_old_r/config/deep_makeCoaddTempExp.py",
+    "settings": {
+      "config.doApplyUberCal": true,
+      "config.makePsfMatched": true
+    }
+  },
+  {
+    "path": "processing/FRB/butler/coadd2_old_r/config/deep_makeCoaddTempExp.py~1",
+    "settings": {
+      "config.doApplyUberCal": true,
+      "config.makePsfMatched": true
+    }
+  },
+  {
+    "path": "processing/FRB/butler/jointcal/config/jointcal.py",
+    "settings": {
+      "config.applyColorTerms": false,
+      "config.astrometryRefObjLoader.ref_dataset_name": "gaia",
+      "config.photometryRefObjLoader.ref_dataset_name": "pan-starrs"
+    }
+  },
+  {
+    "path": "processing/FRB/butler/jointcal/config/jointcal.py~1",
+    "settings": {
+      "config.applyColorTerms": false,
+      "config.astrometryRefObjLoader.ref_dataset_name": "gaia",
+      "config.photometryRefObjLoader.ref_dataset_name": "pan-starrs"
+    }
+  },
+  {
+    "path": "processing/FRB/butler/jointcal/config/jointcal.py~2",
+    "settings": {
+      "config.applyColorTerms": false,
+      "config.astrometryRefObjLoader.ref_dataset_name": "gaia",
+      "config.photometryRefObjLoader.ref_dataset_name": "pan-starrs"
+    }
+  },
+  {
+    "path": "processing/FRB/butler/jointcal/config/jointcal.py~3",
+    "settings": {
+      "config.applyColorTerms": false,
+      "config.astrometryRefObjLoader.ref_dataset_name": "gaia",
+      "config.photometryRefObjLoader.ref_dataset_name": "pan-starrs"
+    }
+  },
+  {
+    "path": "processing/FRB/butler/processCcdOutputs/config/processCcd.py",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": true,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/FRB/butler/processCcdOutputs/config/processCcd.py~1",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": true,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/FRB/butler/processCcdOutputs/config/processCcd.py~2",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": true,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/FRB/butler/processCcdOutputs/config/processCcd.py~4",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": true,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/FRB/butler/processCcdOutputs/config/processCcd.py~5",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": true,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/FRB/butler/processCcdOutputs/config/processCcd.py~6",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "ps1_pv3_3pi_20170110",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "ps1_pv3_3pi_20170110",
+      "config.calibrate.photoCal.applyColorTerms": true,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/FRB/butler/processCcdOutputs/config/processCcd.py~7",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": true,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/FRB/butler/processCcdOutputs/config/processCcd.py~9",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": true,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/FRB/butler/processCcdOutputs_noct/config/processCcd.py",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/FRB/butler/processCcdOutputs_noct/config/processCcd.py~1",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/FRB/butler/processCcdOutputs_noct/config/processCcd.py~2",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/FRB/butler/processCcdOutputs_noct/config/processCcd.py~3",
+    "settings": {
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.photoCal.applyColorTerms": false,
+      "config.calibrate.photoCal.photoCatName": "ps1_pv3_3pi_20170110"
+    }
+  },
+  {
+    "path": "processing/FRB/overrides/makeCoaddTempExp_config.py",
+    "settings": {
+      "config.doApplyUberCal": true,
+      "config.makePsfMatched": true
+    }
+  },
+  {
+    "path": "processing/FRB/overrides/processCcdConfig.py",
+    "settings": {
+      "config.calibrate.photoRefObjLoader.ref_dataset_name": "pan-starrs",
+      "config.calibrate.astromRefObjLoader.ref_dataset_name": "gaia",
+      "config.calibrate.photoCal.applyColorTerms": false
+    }
+  }
+]

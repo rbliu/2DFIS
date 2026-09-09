@@ -1,0 +1,2799 @@
+import lsst.pipe.tasks.multiBand
+assert type(config)==lsst.pipe.tasks.multiBand.MeasureMergedCoaddSourcesConfig, 'config is of type %s.%s instead of lsst.pipe.tasks.multiBand.MeasureMergedCoaddSourcesConfig' % (type(config).__module__, type(config).__name__)
+import lsst.shapelet
+import lsst.shapelet.constants.constantsContinued
+import lsst.meas.extensions.photometryKron
+import lsst.meas.modelfit.pixelFitRegion.pixelFitRegionContinued
+import lsst.meas.modelfit.model
+import lsst.shapelet.tractor
+import lsst.shapelet.constants.constants
+import lsst.meas.base.baseMeasurement
+import lsst.meas.modelfit.pixelFitRegion.pixelFitRegion
+import lsst.meas.base.peakLikelihoodFlux
+import lsst.meas.modelfit.psf.psf
+import lsst.meas.base.classification
+import lsst.meas.extensions.shapeHSM.hsmShapeControl
+import lsst.meas.extensions.photometryKron.photometryKron
+import lsst.shapelet.gaussHermiteConvolution
+import lsst.shapelet.radialProfile.radialProfileContinued
+import lsst.meas.modelfit.integrals
+import lsst.meas.modelfit.cmodel.cmodel
+import lsst.shapelet.radialProfile
+import lsst.meas.modelfit.version
+import lsst.meas.modelfit
+import lsst.meas.modelfit.priors
+import lsst.meas.base.noiseReplacer
+import lsst.shapelet.hermiteTransformMatrix
+import lsst.meas.modelfit.likelihood
+import lsst.shapelet.multiShapeletFunction.multiShapeletFunctionContinued
+import lsst.meas.modelfit.adaptiveImportanceSampler
+import lsst.meas.modelfit.optimizer.optimizerContinued
+import lsst.shapelet.gaussHermiteProjection
+import lsst.meas.base.plugins
+import lsst.meas.base.psfFlux
+import lsst.meas.algorithms.loadIndexedReferenceObjects
+import lsst.meas.base.localBackground
+import lsst.meas.extensions.shapeHSM.hsmMomentsControl
+import lsst.shapelet.shapeletFunction.shapeletFunction
+import lsst.shapelet.version
+import lsst.meas.algorithms.sourceSelector
+import lsst.meas.base.scaledApertureFlux
+import lsst.meas.modelfit.common
+import lsst.meas.modelfit.multiModel
+import lsst.meas.modelfit.optimizer.optimizer
+import lsst.meas.base.sdssShape
+import lsst.shapelet.multiShapeletFunction
+import lsst.meas.modelfit.pixelFitRegion
+import lsst.meas.modelfit.unitSystem
+import lsst.meas.extensions.shapeHSM
+import lsst.pipe.tasks.propagateVisitFlags
+import lsst.meas.modelfit.optimizer
+import lsst.shapelet.shapeletFunction
+import lsst.meas.base.pixelFlags
+import lsst.shapelet.radialProfile.radialProfile
+import lsst.shapelet.shapeletFunction.shapeletFunctionContinued
+import lsst.shapelet.constants
+import lsst.meas.base.apertureFlux
+import lsst.meas.base.blendedness
+import lsst.meas.modelfit.psf
+import lsst.meas.modelfit.psf.psfContinued
+import lsst.meas.modelfit.unitTransformedLikelihood
+import lsst.meas.base.gaussianFlux
+import lsst.meas.modelfit.sampler
+import lsst.pipe.base.config
+import lsst.meas.base.catalogCalculation
+import lsst.meas.extensions.shapeHSM.version
+import lsst.meas.astrom.directMatch
+import lsst.meas.modelfit.cmodel
+import lsst.shapelet.basisEvaluator
+import lsst.pipe.tasks.setPrimaryFlags
+import lsst.shapelet.functorKeys
+import lsst.meas.base.applyApCorr
+import lsst.meas.modelfit.cmodel.cmodelContinued
+import lsst.meas.base.sdssCentroid
+import lsst.meas.base.sfm
+import lsst.meas.extensions.photometryKron.version
+import lsst.meas.base.naiveCentroid
+import lsst.meas.base.footprintArea
+import lsst.shapelet.matrixBuilder
+import lsst.meas.modelfit.priors.priors
+import lsst.meas.base.wrappers
+import lsst.shapelet.multiShapeletBasis
+import lsst.meas.modelfit.mixture
+import lsst.meas.modelfit.truncatedGaussian
+import lsst.shapelet.multiShapeletFunction.multiShapeletFunction
+import lsst.meas.modelfit.priors.priorsContinued
+import lsst.shapelet.generator
+# Name of the input catalog to use.If the single band deblender was used this should be 'deblendedFlux.If the multi-band deblender was used this should be 'deblendedModel.If no deblending was performed this should be 'mergeDet'
+config.inputCatalog='deblendedFlux'
+
+# the name of the centroiding algorithm used to set source x,y
+config.measurement.slots.centroid='base_SdssCentroid'
+
+# the name of the algorithm used to set source moments parameters
+config.measurement.slots.shape='ext_shapeHSM_HsmSourceMoments'
+
+# the name of the algorithm used to set PSF moments parameters
+config.measurement.slots.psfShape='ext_shapeHSM_HsmPsfMoments'
+
+# the name of the algorithm used to set the source aperture instFlux slot
+config.measurement.slots.apFlux='base_CircularApertureFlux_12_0'
+
+# the name of the algorithm used to set the source model instFlux slot
+config.measurement.slots.modelFlux='modelfit_CModel'
+
+# the name of the algorithm used to set the source psf instFlux slot
+config.measurement.slots.psfFlux='base_PsfFlux'
+
+# the name of the algorithm used to set the source Gaussian instFlux slot
+config.measurement.slots.gaussianFlux='base_GaussianFlux'
+
+# the name of the instFlux measurement algorithm used for calibration
+config.measurement.slots.calibFlux='base_CircularApertureFlux_12_0'
+
+# When measuring, replace other detected footprints with noise?
+config.measurement.doReplaceWithNoise=True
+
+# How to choose mean and variance of the Gaussian noise we generate?
+config.measurement.noiseReplacer.noiseSource='measure'
+
+# Add ann offset to the generated noise.
+config.measurement.noiseReplacer.noiseOffset=0.0
+
+# The seed multiplier value to use for random number generation:
+# >= 1: set the seed deterministically based on exposureId
+# 0: fall back to the afw.math.Random default constructor (which uses a seed value of 1)
+config.measurement.noiseReplacer.noiseSeedMultiplier=1
+
+# Prefix to give undeblended plugins
+config.measurement.undeblendedPrefix='undeblended_'
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_PsfFlux'].doMeasure=True
+
+# Mask planes that indicate pixels that should be excluded from the fit
+config.measurement.plugins['base_PsfFlux'].badMaskPlanes=[]
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_PeakLikelihoodFlux'].doMeasure=True
+
+# Name of warping kernel (e.g. "lanczos4") used to compute the peak
+config.measurement.plugins['base_PeakLikelihoodFlux'].warpingKernelName='lanczos4'
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_GaussianFlux'].doMeasure=True
+
+# FIXME! NEVER DOCUMENTED!
+config.measurement.plugins['base_GaussianFlux'].background=0.0
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_NaiveCentroid'].doMeasure=True
+
+# Value to subtract from the image pixel values
+config.measurement.plugins['base_NaiveCentroid'].background=0.0
+
+# Do check that the centroid is contained in footprint.
+config.measurement.plugins['base_NaiveCentroid'].doFootprintCheck=True
+
+# If set > 0, Centroid Check also checks distance from footprint peak.
+config.measurement.plugins['base_NaiveCentroid'].maxDistToPeak=-1.0
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_SdssCentroid'].doMeasure=True
+
+# maximum allowed binning
+config.measurement.plugins['base_SdssCentroid'].binmax=16
+
+# Do check that the centroid is contained in footprint.
+config.measurement.plugins['base_SdssCentroid'].doFootprintCheck=True
+
+# If set > 0, Centroid Check also checks distance from footprint peak.
+config.measurement.plugins['base_SdssCentroid'].maxDistToPeak=-1.0
+
+# if the peak's less than this insist on binning at least once
+config.measurement.plugins['base_SdssCentroid'].peakMin=-1.0
+
+# fiddle factor for adjusting the binning
+config.measurement.plugins['base_SdssCentroid'].wfac=1.5
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_PixelFlags'].doMeasure=True
+
+# List of mask planes to be searched for which occur anywhere within a footprint. If any of the planes are found they will have a corresponding pixel flag set.
+config.measurement.plugins['base_PixelFlags'].masksFpAnywhere=['CLIPPED', 'SENSOR_EDGE', 'INEXACT_PSF']
+
+# List of mask planes to be searched for which occur in the center of a footprint. If any of the planes are found they will have a corresponding pixel flag set.
+config.measurement.plugins['base_PixelFlags'].masksFpCenter=['CLIPPED', 'SENSOR_EDGE', 'INEXACT_PSF']
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_SdssShape'].doMeasure=True
+
+# Additional value to add to background
+config.measurement.plugins['base_SdssShape'].background=0.0
+
+# Whether to also compute the shape of the PSF model
+config.measurement.plugins['base_SdssShape'].doMeasurePsf=True
+
+# Maximum number of iterations
+config.measurement.plugins['base_SdssShape'].maxIter=100
+
+# Maximum centroid shift, limited to 2-10
+config.measurement.plugins['base_SdssShape'].maxShift=0.0
+
+# Convergence tolerance for e1,e2
+config.measurement.plugins['base_SdssShape'].tol1=9.999999747378752e-06
+
+# Convergence tolerance for FWHM
+config.measurement.plugins['base_SdssShape'].tol2=9.999999747378752e-05
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_ScaledApertureFlux'].doMeasure=True
+
+# Scaling factor of PSF FWHM for aperture radius.
+config.measurement.plugins['base_ScaledApertureFlux'].scale=3.14
+
+# Warping kernel used to shift Sinc photometry coefficients to different center positions
+config.measurement.plugins['base_ScaledApertureFlux'].shiftKernel='lanczos5'
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_CircularApertureFlux'].doMeasure=True
+
+# Maximum radius (in pixels) for which the sinc algorithm should be used instead of the faster naive algorithm.  For elliptical apertures, this is the minor axis radius.
+config.measurement.plugins['base_CircularApertureFlux'].maxSincRadius=10.0
+
+# Radius (in pixels) of apertures.
+config.measurement.plugins['base_CircularApertureFlux'].radii=[3.0, 4.5, 6.0, 9.0, 12.0, 17.0, 25.0, 35.0, 50.0, 70.0]
+
+# Warping kernel used to shift Sinc photometry coefficients to different center positions
+config.measurement.plugins['base_CircularApertureFlux'].shiftKernel='lanczos5'
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_Blendedness'].doMeasure=True
+
+# Whether to compute quantities related to the Gaussian-weighted flux
+config.measurement.plugins['base_Blendedness'].doFlux=True
+
+# Whether to compute HeavyFootprint dot products (the old deblend.blendedness parameter)
+config.measurement.plugins['base_Blendedness'].doOld=True
+
+# Whether to compute quantities related to the Gaussian-weighted shape
+config.measurement.plugins['base_Blendedness'].doShape=True
+
+# Radius factor that sets the maximum extent of the weight function (and hence the flux measurements)
+config.measurement.plugins['base_Blendedness'].nSigmaWeightMax=3.0
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_LocalBackground'].doMeasure=True
+
+# Inner radius for background annulus as a multiple of the PSF sigma
+config.measurement.plugins['base_LocalBackground'].annulusInner=7.0
+
+# Outer radius for background annulus as a multiple of the PSF sigma
+config.measurement.plugins['base_LocalBackground'].annulusOuter=15.0
+
+# Mask planes that indicate pixels that should be excluded from the measurement
+config.measurement.plugins['base_LocalBackground'].badMaskPlanes=['BAD', 'SAT', 'NO_DATA']
+
+# Number of sigma-clipping iterations for background measurement
+config.measurement.plugins['base_LocalBackground'].bgIter=3
+
+# Rejection threshold (in standard deviations) for background measurement
+config.measurement.plugins['base_LocalBackground'].bgRej=3.0
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_FPPosition'].doMeasure=True
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_Jacobian'].doMeasure=True
+
+# Nominal pixel size (arcsec)
+config.measurement.plugins['base_Jacobian'].pixelScale=0.5
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_Variance'].doMeasure=True
+
+# Scale factor to apply to shape for aperture
+config.measurement.plugins['base_Variance'].scale=5.0
+
+# Mask planes to ignore
+config.measurement.plugins['base_Variance'].mask=['DETECTED', 'DETECTED_NEGATIVE', 'BAD', 'SAT']
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_InputCount'].doMeasure=True
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_PeakCentroid'].doMeasure=True
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['base_SkyCoord'].doMeasure=True
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['ext_shapeHSM_HsmShapeBj'].doMeasure=True
+
+# Mask planes that indicate pixels that should be excluded from the fit
+config.measurement.plugins['ext_shapeHSM_HsmShapeBj'].badMaskPlanes=None
+
+# Field name for number of deblend children
+config.measurement.plugins['ext_shapeHSM_HsmShapeBj'].deblendNChild=None
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['ext_shapeHSM_HsmShapeLinear'].doMeasure=True
+
+# Mask planes that indicate pixels that should be excluded from the fit
+config.measurement.plugins['ext_shapeHSM_HsmShapeLinear'].badMaskPlanes=None
+
+# Field name for number of deblend children
+config.measurement.plugins['ext_shapeHSM_HsmShapeLinear'].deblendNChild=None
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['ext_shapeHSM_HsmShapeKsb'].doMeasure=True
+
+# Mask planes that indicate pixels that should be excluded from the fit
+config.measurement.plugins['ext_shapeHSM_HsmShapeKsb'].badMaskPlanes=None
+
+# Field name for number of deblend children
+config.measurement.plugins['ext_shapeHSM_HsmShapeKsb'].deblendNChild=None
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['ext_shapeHSM_HsmShapeRegauss'].doMeasure=True
+
+# Mask planes that indicate pixels that should be excluded from the fit
+config.measurement.plugins['ext_shapeHSM_HsmShapeRegauss'].badMaskPlanes=None
+
+# Field name for number of deblend children
+config.measurement.plugins['ext_shapeHSM_HsmShapeRegauss'].deblendNChild='deblend_nChild'
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['ext_shapeHSM_HsmSourceMoments'].doMeasure=True
+
+# Store measured flux?
+config.measurement.plugins['ext_shapeHSM_HsmSourceMoments'].addFlux=None
+
+# Mask planes used to reject bad pixels.
+config.measurement.plugins['ext_shapeHSM_HsmSourceMoments'].badMaskPlanes=None
+
+# Use round weight function?
+config.measurement.plugins['ext_shapeHSM_HsmSourceMoments'].roundMoments=None
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['ext_shapeHSM_HsmSourceMomentsRound'].doMeasure=True
+
+# Store measured flux?
+config.measurement.plugins['ext_shapeHSM_HsmSourceMomentsRound'].addFlux=None
+
+# Mask planes used to reject bad pixels.
+config.measurement.plugins['ext_shapeHSM_HsmSourceMomentsRound'].badMaskPlanes=None
+
+# Use round weight function?
+config.measurement.plugins['ext_shapeHSM_HsmSourceMomentsRound'].roundMoments=None
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['ext_shapeHSM_HsmPsfMoments'].doMeasure=True
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].doMeasure=True
+
+# Shapelet order of inner expansion (0 == Gaussian)
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].innerOrder=2
+
+# Don't allow the semi-major radius of any component to go above this fraction of the PSF image width
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].maxRadiusBoxFraction=0.4
+
+# Don't allow the semi-minor radius of any component to drop below this value (pixels)
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].minRadius=1.0
+
+# Don't allow the determinant radii of the two components to differ by less than this (pixels)
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].minRadiusDiff=0.5
+
+# whether to save all iterations for debugging purposes
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.doSaveIterations=False
+
+# If the maximum of the gradient falls below this threshold, consider the algorithm converged
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.gradientThreshold=1e-05
+
+# maximum number of iterations (i.e. function evaluations and trust region subproblems) per step
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.maxInnerIterations=20
+
+# maximum number of steps
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.maxOuterIterations=500
+
+# If the trust radius falls below this threshold, consider the algorithm converged
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.minTrustRadiusThreshold=1e-05
+
+# If true, ignore the SR1 update term in the Hessian, resulting in a Levenberg-Marquardt-like method
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.noSR1Term=False
+
+# absolute step size used for numerical derivatives (added to other steps)
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.numDiffAbsStep=0.0
+
+# relative step size used for numerical derivatives (added to other steps)
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.numDiffRelStep=0.0
+
+# step size (in units of trust radius) used for numerical derivatives (added to relative step)
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.numDiffTrustRadiusStep=0.1
+
+# Skip the SR1 update if |v||s| / (|v||s|) is less than this threshold
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.skipSR1UpdateThreshold=1e-08
+
+# steps with reduction ratio greater than this are accepted
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.stepAcceptThreshold=0.0
+
+# when increase the trust region size, multiply the radius by this factor
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.trustRegionGrowFactor=2.0
+
+# steps with reduction radio greater than this may increase the trust radius
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.trustRegionGrowReductionRatio=0.75
+
+# steps with length this fraction of the trust radius may increase the trust radius
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.trustRegionGrowStepFraction=0.8
+
+# the initial trust region will be set to this value
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.trustRegionInitialSize=1.0
+
+# when reducing the trust region size, multiply the radius by this factor
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.trustRegionShrinkFactor=0.3333333333333333
+
+# steps with reduction radio less than this will decrease the trust radius
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.trustRegionShrinkReductionRatio=0.25
+
+# value passed as the tolerance to solveTrustRegion
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].optimizer.trustRegionSolverTolerance=1e-08
+
+# Shapelet order of outer expansion (0 == Gaussian)
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].outerOrder=1
+
+# Initial outer Gaussian peak height divided by inner Gaussian peak height
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].peakRatio=0.1
+
+# Initial outer radius divided by inner radius
+config.measurement.plugins['modelfit_DoubleShapeletPsfApprox'].radiusRatio=2.0
+
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models={}
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian']=lsst.meas.modelfit.GeneralPsfFitterConfig()
+# Default value for the noiseSigma parameter in GeneralPsfFitter.apply()
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].defaultNoiseSigma=0.001
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].inner.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].inner.order=-1
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].inner.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].inner.radiusFactor=0.5
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].inner.radiusPriorSigma=0.5
+
+# whether to save all iterations for debugging purposes
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.doSaveIterations=False
+
+# If the maximum of the gradient falls below this threshold, consider the algorithm converged
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.gradientThreshold=1e-05
+
+# maximum number of iterations (i.e. function evaluations and trust region subproblems) per step
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.maxInnerIterations=20
+
+# maximum number of steps
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.maxOuterIterations=500
+
+# If the trust radius falls below this threshold, consider the algorithm converged
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.minTrustRadiusThreshold=1e-05
+
+# If true, ignore the SR1 update term in the Hessian, resulting in a Levenberg-Marquardt-like method
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.noSR1Term=False
+
+# absolute step size used for numerical derivatives (added to other steps)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.numDiffAbsStep=0.0
+
+# relative step size used for numerical derivatives (added to other steps)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.numDiffRelStep=0.0
+
+# step size (in units of trust radius) used for numerical derivatives (added to relative step)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.numDiffTrustRadiusStep=0.1
+
+# Skip the SR1 update if |v||s| / (|v||s|) is less than this threshold
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.skipSR1UpdateThreshold=1e-08
+
+# steps with reduction ratio greater than this are accepted
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.stepAcceptThreshold=0.0
+
+# when increase the trust region size, multiply the radius by this factor
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.trustRegionGrowFactor=2.0
+
+# steps with reduction radio greater than this may increase the trust radius
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.trustRegionGrowReductionRatio=0.75
+
+# steps with length this fraction of the trust radius may increase the trust radius
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.trustRegionGrowStepFraction=0.8
+
+# the initial trust region will be set to this value
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.trustRegionInitialSize=1.0
+
+# when reducing the trust region size, multiply the radius by this factor
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.trustRegionShrinkFactor=0.3333333333333333
+
+# steps with reduction radio less than this will decrease the trust radius
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.trustRegionShrinkReductionRatio=0.25
+
+# value passed as the tolerance to solveTrustRegion
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.trustRegionSolverTolerance=1e-08
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].outer.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].outer.order=-1
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].outer.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].outer.radiusFactor=4.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].outer.radiusPriorSigma=0.5
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].primary.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].primary.order=0
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].primary.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].primary.radiusFactor=1.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].primary.radiusPriorSigma=0.5
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].wings.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].wings.order=-1
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].wings.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].wings.radiusFactor=2.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].wings.radiusPriorSigma=0.5
+
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian']=lsst.meas.modelfit.GeneralPsfFitterConfig()
+# Default value for the noiseSigma parameter in GeneralPsfFitter.apply()
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].defaultNoiseSigma=0.001
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].inner.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].inner.order=-1
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].inner.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].inner.radiusFactor=0.5
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].inner.radiusPriorSigma=0.5
+
+# whether to save all iterations for debugging purposes
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.doSaveIterations=False
+
+# If the maximum of the gradient falls below this threshold, consider the algorithm converged
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.gradientThreshold=1e-05
+
+# maximum number of iterations (i.e. function evaluations and trust region subproblems) per step
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.maxInnerIterations=20
+
+# maximum number of steps
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.maxOuterIterations=500
+
+# If the trust radius falls below this threshold, consider the algorithm converged
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.minTrustRadiusThreshold=1e-05
+
+# If true, ignore the SR1 update term in the Hessian, resulting in a Levenberg-Marquardt-like method
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.noSR1Term=False
+
+# absolute step size used for numerical derivatives (added to other steps)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.numDiffAbsStep=0.0
+
+# relative step size used for numerical derivatives (added to other steps)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.numDiffRelStep=0.0
+
+# step size (in units of trust radius) used for numerical derivatives (added to relative step)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.numDiffTrustRadiusStep=0.1
+
+# Skip the SR1 update if |v||s| / (|v||s|) is less than this threshold
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.skipSR1UpdateThreshold=1e-08
+
+# steps with reduction ratio greater than this are accepted
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.stepAcceptThreshold=0.0
+
+# when increase the trust region size, multiply the radius by this factor
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.trustRegionGrowFactor=2.0
+
+# steps with reduction radio greater than this may increase the trust radius
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.trustRegionGrowReductionRatio=0.75
+
+# steps with length this fraction of the trust radius may increase the trust radius
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.trustRegionGrowStepFraction=0.8
+
+# the initial trust region will be set to this value
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.trustRegionInitialSize=1.0
+
+# when reducing the trust region size, multiply the radius by this factor
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.trustRegionShrinkFactor=0.3333333333333333
+
+# steps with reduction radio less than this will decrease the trust radius
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.trustRegionShrinkReductionRatio=0.25
+
+# value passed as the tolerance to solveTrustRegion
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.trustRegionSolverTolerance=1e-08
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].outer.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].outer.order=-1
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].outer.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].outer.radiusFactor=4.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].outer.radiusPriorSigma=0.5
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].primary.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].primary.order=0
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].primary.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].primary.radiusFactor=1.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].primary.radiusPriorSigma=0.5
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].wings.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].wings.order=0
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].wings.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].wings.radiusFactor=2.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].wings.radiusPriorSigma=0.5
+
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet']=lsst.meas.modelfit.GeneralPsfFitterConfig()
+# Default value for the noiseSigma parameter in GeneralPsfFitter.apply()
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].defaultNoiseSigma=0.001
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].inner.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].inner.order=-1
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].inner.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].inner.radiusFactor=0.5
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].inner.radiusPriorSigma=0.5
+
+# whether to save all iterations for debugging purposes
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.doSaveIterations=False
+
+# If the maximum of the gradient falls below this threshold, consider the algorithm converged
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.gradientThreshold=1e-05
+
+# maximum number of iterations (i.e. function evaluations and trust region subproblems) per step
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.maxInnerIterations=20
+
+# maximum number of steps
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.maxOuterIterations=500
+
+# If the trust radius falls below this threshold, consider the algorithm converged
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.minTrustRadiusThreshold=1e-05
+
+# If true, ignore the SR1 update term in the Hessian, resulting in a Levenberg-Marquardt-like method
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.noSR1Term=False
+
+# absolute step size used for numerical derivatives (added to other steps)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.numDiffAbsStep=0.0
+
+# relative step size used for numerical derivatives (added to other steps)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.numDiffRelStep=0.0
+
+# step size (in units of trust radius) used for numerical derivatives (added to relative step)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.numDiffTrustRadiusStep=0.1
+
+# Skip the SR1 update if |v||s| / (|v||s|) is less than this threshold
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.skipSR1UpdateThreshold=1e-08
+
+# steps with reduction ratio greater than this are accepted
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.stepAcceptThreshold=0.0
+
+# when increase the trust region size, multiply the radius by this factor
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.trustRegionGrowFactor=2.0
+
+# steps with reduction radio greater than this may increase the trust radius
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.trustRegionGrowReductionRatio=0.75
+
+# steps with length this fraction of the trust radius may increase the trust radius
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.trustRegionGrowStepFraction=0.8
+
+# the initial trust region will be set to this value
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.trustRegionInitialSize=1.0
+
+# when reducing the trust region size, multiply the radius by this factor
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.trustRegionShrinkFactor=0.3333333333333333
+
+# steps with reduction radio less than this will decrease the trust radius
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.trustRegionShrinkReductionRatio=0.25
+
+# value passed as the tolerance to solveTrustRegion
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.trustRegionSolverTolerance=1e-08
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].outer.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].outer.order=-1
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].outer.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].outer.radiusFactor=4.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].outer.radiusPriorSigma=0.5
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].primary.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].primary.order=2
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].primary.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].primary.radiusFactor=1.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].primary.radiusPriorSigma=0.5
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].wings.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].wings.order=1
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].wings.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].wings.radiusFactor=2.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].wings.radiusPriorSigma=0.5
+
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full']=lsst.meas.modelfit.GeneralPsfFitterConfig()
+# Default value for the noiseSigma parameter in GeneralPsfFitter.apply()
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].defaultNoiseSigma=0.001
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].inner.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].inner.order=0
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].inner.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].inner.radiusFactor=0.5
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].inner.radiusPriorSigma=0.5
+
+# whether to save all iterations for debugging purposes
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.doSaveIterations=False
+
+# If the maximum of the gradient falls below this threshold, consider the algorithm converged
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.gradientThreshold=1e-05
+
+# maximum number of iterations (i.e. function evaluations and trust region subproblems) per step
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.maxInnerIterations=20
+
+# maximum number of steps
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.maxOuterIterations=500
+
+# If the trust radius falls below this threshold, consider the algorithm converged
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.minTrustRadiusThreshold=1e-05
+
+# If true, ignore the SR1 update term in the Hessian, resulting in a Levenberg-Marquardt-like method
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.noSR1Term=False
+
+# absolute step size used for numerical derivatives (added to other steps)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.numDiffAbsStep=0.0
+
+# relative step size used for numerical derivatives (added to other steps)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.numDiffRelStep=0.0
+
+# step size (in units of trust radius) used for numerical derivatives (added to relative step)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.numDiffTrustRadiusStep=0.1
+
+# Skip the SR1 update if |v||s| / (|v||s|) is less than this threshold
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.skipSR1UpdateThreshold=1e-08
+
+# steps with reduction ratio greater than this are accepted
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.stepAcceptThreshold=0.0
+
+# when increase the trust region size, multiply the radius by this factor
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.trustRegionGrowFactor=2.0
+
+# steps with reduction radio greater than this may increase the trust radius
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.trustRegionGrowReductionRatio=0.75
+
+# steps with length this fraction of the trust radius may increase the trust radius
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.trustRegionGrowStepFraction=0.8
+
+# the initial trust region will be set to this value
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.trustRegionInitialSize=1.0
+
+# when reducing the trust region size, multiply the radius by this factor
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.trustRegionShrinkFactor=0.3333333333333333
+
+# steps with reduction radio less than this will decrease the trust radius
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.trustRegionShrinkReductionRatio=0.25
+
+# value passed as the tolerance to solveTrustRegion
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.trustRegionSolverTolerance=1e-08
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].outer.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].outer.order=0
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].outer.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].outer.radiusFactor=4.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].outer.radiusPriorSigma=0.5
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].primary.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].primary.order=4
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].primary.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].primary.radiusFactor=1.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].primary.radiusPriorSigma=0.5
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].wings.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].wings.order=4
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].wings.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].wings.radiusFactor=2.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].models['Full'].wings.radiusPriorSigma=0.5
+
+# a sequence of model names indicating which models should be fit, and their order
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].sequence=['DoubleShapelet']
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['modelfit_GeneralShapeletPsfApprox'].doMeasure=True
+
+# Whether to record the steps the optimizer takes (or just the number, if running as a plugin)
+config.measurement.plugins['modelfit_CModel'].dev.doRecordHistory=True
+
+# Whether to record the time spent in this stage
+config.measurement.plugins['modelfit_CModel'].dev.doRecordTime=True
+
+# Softened core width for ellipticity distribution (conformal shear units).
+config.measurement.plugins['modelfit_CModel'].dev.empiricalPriorConfig.ellipticityCore=0.001
+
+# Width of exponential ellipticity distribution (conformal shear units).
+config.measurement.plugins['modelfit_CModel'].dev.empiricalPriorConfig.ellipticitySigma=0.3
+
+# ln(radius) at which the softened cutoff begins towards the minimum
+config.measurement.plugins['modelfit_CModel'].dev.empiricalPriorConfig.logRadiusMinInner=-6.0
+
+# Minimum ln(radius).
+config.measurement.plugins['modelfit_CModel'].dev.empiricalPriorConfig.logRadiusMinOuter=-6.001
+
+# Mean of the Student's T distribution used for ln(radius) at large radius, and the transition point between a flat distribution and the Student's T.
+config.measurement.plugins['modelfit_CModel'].dev.empiricalPriorConfig.logRadiusMu=-1.0
+
+# Number of degrees of freedom for the Student's T distribution on ln(radius).
+config.measurement.plugins['modelfit_CModel'].dev.empiricalPriorConfig.logRadiusNu=50.0
+
+# Width of the Student's T distribution in ln(radius).
+config.measurement.plugins['modelfit_CModel'].dev.empiricalPriorConfig.logRadiusSigma=0.45
+
+# Ellipticity magnitude (conformal shear units) at which the softened cutoff begins
+config.measurement.plugins['modelfit_CModel'].dev.linearPriorConfig.ellipticityMaxInner=2.0
+
+# Maximum ellipticity magnitude (conformal shear units)
+config.measurement.plugins['modelfit_CModel'].dev.linearPriorConfig.ellipticityMaxOuter=2.001
+
+# ln(radius) at which the softened cutoff begins towards the maximum
+config.measurement.plugins['modelfit_CModel'].dev.linearPriorConfig.logRadiusMaxInner=3.0
+
+# Maximum ln(radius)
+config.measurement.plugins['modelfit_CModel'].dev.linearPriorConfig.logRadiusMaxOuter=3.001
+
+# ln(radius) at which the softened cutoff begins towards the minimum
+config.measurement.plugins['modelfit_CModel'].dev.linearPriorConfig.logRadiusMinInner=-6.0
+
+# The ratio P(logRadiusMinInner)/P(logRadiusMaxInner)
+config.measurement.plugins['modelfit_CModel'].dev.linearPriorConfig.logRadiusMinMaxRatio=1.0
+
+# Minimum ln(radius)
+config.measurement.plugins['modelfit_CModel'].dev.linearPriorConfig.logRadiusMinOuter=-6.001
+
+# Maximum radius used in approximating profile with Gaussians (0=default for this profile)
+config.measurement.plugins['modelfit_CModel'].dev.maxRadius=0
+
+# Number of Gaussian used to approximate the profile
+config.measurement.plugins['modelfit_CModel'].dev.nComponents=8
+
+# whether to save all iterations for debugging purposes
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.doSaveIterations=False
+
+# If the maximum of the gradient falls below this threshold, consider the algorithm converged
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.gradientThreshold=1e-05
+
+# maximum number of iterations (i.e. function evaluations and trust region subproblems) per step
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.maxInnerIterations=20
+
+# maximum number of steps
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.maxOuterIterations=500
+
+# If the trust radius falls below this threshold, consider the algorithm converged
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.minTrustRadiusThreshold=1e-05
+
+# If true, ignore the SR1 update term in the Hessian, resulting in a Levenberg-Marquardt-like method
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.noSR1Term=False
+
+# absolute step size used for numerical derivatives (added to other steps)
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.numDiffAbsStep=0.0
+
+# relative step size used for numerical derivatives (added to other steps)
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.numDiffRelStep=0.0
+
+# step size (in units of trust radius) used for numerical derivatives (added to relative step)
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.numDiffTrustRadiusStep=0.1
+
+# Skip the SR1 update if |v||s| / (|v||s|) is less than this threshold
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.skipSR1UpdateThreshold=1e-08
+
+# steps with reduction ratio greater than this are accepted
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.stepAcceptThreshold=0.0
+
+# when increase the trust region size, multiply the radius by this factor
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.trustRegionGrowFactor=2.0
+
+# steps with reduction radio greater than this may increase the trust radius
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.trustRegionGrowReductionRatio=0.75
+
+# steps with length this fraction of the trust radius may increase the trust radius
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.trustRegionGrowStepFraction=0.8
+
+# the initial trust region will be set to this value
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.trustRegionInitialSize=1.0
+
+# when reducing the trust region size, multiply the radius by this factor
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.trustRegionShrinkFactor=0.3333333333333333
+
+# steps with reduction radio less than this will decrease the trust radius
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.trustRegionShrinkReductionRatio=0.25
+
+# value passed as the tolerance to solveTrustRegion
+config.measurement.plugins['modelfit_CModel'].dev.optimizer.trustRegionSolverTolerance=1e-08
+
+# Name of the Prior that defines the model to fit (a filename in $MEAS_MODELFIT_DIR/data, with no extension), if priorSource='FILE'.  Ignored for forced fitting.
+config.measurement.plugins['modelfit_CModel'].dev.priorName=''
+
+# One of 'FILE', 'LINEAR', 'EMPIRICAL', or 'NONE', indicating whether the prior should be loaded from disk, created from one of the nested prior config/control objects, or None
+config.measurement.plugins['modelfit_CModel'].dev.priorSource='EMPIRICAL'
+
+# Name of the shapelet.RadialProfile that defines the model to fit
+config.measurement.plugins['modelfit_CModel'].dev.profileName='luv'
+
+# Use per-pixel variances as weights in the nonlinear fit (the final linear fit for flux never uses per-pixel variances)
+config.measurement.plugins['modelfit_CModel'].dev.usePixelWeights=False
+
+# Scale the likelihood by this factor to artificially reweight it w.r.t. the prior.
+config.measurement.plugins['modelfit_CModel'].dev.weightsMultiplier=1.0
+
+# Whether to record the steps the optimizer takes (or just the number, if running as a plugin)
+config.measurement.plugins['modelfit_CModel'].exp.doRecordHistory=True
+
+# Whether to record the time spent in this stage
+config.measurement.plugins['modelfit_CModel'].exp.doRecordTime=True
+
+# Softened core width for ellipticity distribution (conformal shear units).
+config.measurement.plugins['modelfit_CModel'].exp.empiricalPriorConfig.ellipticityCore=0.001
+
+# Width of exponential ellipticity distribution (conformal shear units).
+config.measurement.plugins['modelfit_CModel'].exp.empiricalPriorConfig.ellipticitySigma=0.3
+
+# ln(radius) at which the softened cutoff begins towards the minimum
+config.measurement.plugins['modelfit_CModel'].exp.empiricalPriorConfig.logRadiusMinInner=-6.0
+
+# Minimum ln(radius).
+config.measurement.plugins['modelfit_CModel'].exp.empiricalPriorConfig.logRadiusMinOuter=-6.001
+
+# Mean of the Student's T distribution used for ln(radius) at large radius, and the transition point between a flat distribution and the Student's T.
+config.measurement.plugins['modelfit_CModel'].exp.empiricalPriorConfig.logRadiusMu=-1.0
+
+# Number of degrees of freedom for the Student's T distribution on ln(radius).
+config.measurement.plugins['modelfit_CModel'].exp.empiricalPriorConfig.logRadiusNu=50.0
+
+# Width of the Student's T distribution in ln(radius).
+config.measurement.plugins['modelfit_CModel'].exp.empiricalPriorConfig.logRadiusSigma=0.45
+
+# Ellipticity magnitude (conformal shear units) at which the softened cutoff begins
+config.measurement.plugins['modelfit_CModel'].exp.linearPriorConfig.ellipticityMaxInner=2.0
+
+# Maximum ellipticity magnitude (conformal shear units)
+config.measurement.plugins['modelfit_CModel'].exp.linearPriorConfig.ellipticityMaxOuter=2.001
+
+# ln(radius) at which the softened cutoff begins towards the maximum
+config.measurement.plugins['modelfit_CModel'].exp.linearPriorConfig.logRadiusMaxInner=3.0
+
+# Maximum ln(radius)
+config.measurement.plugins['modelfit_CModel'].exp.linearPriorConfig.logRadiusMaxOuter=3.001
+
+# ln(radius) at which the softened cutoff begins towards the minimum
+config.measurement.plugins['modelfit_CModel'].exp.linearPriorConfig.logRadiusMinInner=-6.0
+
+# The ratio P(logRadiusMinInner)/P(logRadiusMaxInner)
+config.measurement.plugins['modelfit_CModel'].exp.linearPriorConfig.logRadiusMinMaxRatio=1.0
+
+# Minimum ln(radius)
+config.measurement.plugins['modelfit_CModel'].exp.linearPriorConfig.logRadiusMinOuter=-6.001
+
+# Maximum radius used in approximating profile with Gaussians (0=default for this profile)
+config.measurement.plugins['modelfit_CModel'].exp.maxRadius=0
+
+# Number of Gaussian used to approximate the profile
+config.measurement.plugins['modelfit_CModel'].exp.nComponents=6
+
+# whether to save all iterations for debugging purposes
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.doSaveIterations=False
+
+# If the maximum of the gradient falls below this threshold, consider the algorithm converged
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.gradientThreshold=1e-05
+
+# maximum number of iterations (i.e. function evaluations and trust region subproblems) per step
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.maxInnerIterations=20
+
+# maximum number of steps
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.maxOuterIterations=250
+
+# If the trust radius falls below this threshold, consider the algorithm converged
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.minTrustRadiusThreshold=1e-05
+
+# If true, ignore the SR1 update term in the Hessian, resulting in a Levenberg-Marquardt-like method
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.noSR1Term=False
+
+# absolute step size used for numerical derivatives (added to other steps)
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.numDiffAbsStep=0.0
+
+# relative step size used for numerical derivatives (added to other steps)
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.numDiffRelStep=0.0
+
+# step size (in units of trust radius) used for numerical derivatives (added to relative step)
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.numDiffTrustRadiusStep=0.1
+
+# Skip the SR1 update if |v||s| / (|v||s|) is less than this threshold
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.skipSR1UpdateThreshold=1e-08
+
+# steps with reduction ratio greater than this are accepted
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.stepAcceptThreshold=0.0
+
+# when increase the trust region size, multiply the radius by this factor
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.trustRegionGrowFactor=2.0
+
+# steps with reduction radio greater than this may increase the trust radius
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.trustRegionGrowReductionRatio=0.75
+
+# steps with length this fraction of the trust radius may increase the trust radius
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.trustRegionGrowStepFraction=0.8
+
+# the initial trust region will be set to this value
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.trustRegionInitialSize=1.0
+
+# when reducing the trust region size, multiply the radius by this factor
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.trustRegionShrinkFactor=0.3333333333333333
+
+# steps with reduction radio less than this will decrease the trust radius
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.trustRegionShrinkReductionRatio=0.25
+
+# value passed as the tolerance to solveTrustRegion
+config.measurement.plugins['modelfit_CModel'].exp.optimizer.trustRegionSolverTolerance=1e-08
+
+# Name of the Prior that defines the model to fit (a filename in $MEAS_MODELFIT_DIR/data, with no extension), if priorSource='FILE'.  Ignored for forced fitting.
+config.measurement.plugins['modelfit_CModel'].exp.priorName=''
+
+# One of 'FILE', 'LINEAR', 'EMPIRICAL', or 'NONE', indicating whether the prior should be loaded from disk, created from one of the nested prior config/control objects, or None
+config.measurement.plugins['modelfit_CModel'].exp.priorSource='EMPIRICAL'
+
+# Name of the shapelet.RadialProfile that defines the model to fit
+config.measurement.plugins['modelfit_CModel'].exp.profileName='lux'
+
+# Use per-pixel variances as weights in the nonlinear fit (the final linear fit for flux never uses per-pixel variances)
+config.measurement.plugins['modelfit_CModel'].exp.usePixelWeights=False
+
+# Scale the likelihood by this factor to artificially reweight it w.r.t. the prior.
+config.measurement.plugins['modelfit_CModel'].exp.weightsMultiplier=1.0
+
+# If the 2nd-moments shape used to initialize the fit failed, use the PSF moments multiplied by this.  If <= 0.0, abort the fit early instead.
+config.measurement.plugins['modelfit_CModel'].fallbackInitialMomentsPsfFactor=1.5
+
+# Whether to record the steps the optimizer takes (or just the number, if running as a plugin)
+config.measurement.plugins['modelfit_CModel'].initial.doRecordHistory=True
+
+# Whether to record the time spent in this stage
+config.measurement.plugins['modelfit_CModel'].initial.doRecordTime=True
+
+# Softened core width for ellipticity distribution (conformal shear units).
+config.measurement.plugins['modelfit_CModel'].initial.empiricalPriorConfig.ellipticityCore=0.001
+
+# Width of exponential ellipticity distribution (conformal shear units).
+config.measurement.plugins['modelfit_CModel'].initial.empiricalPriorConfig.ellipticitySigma=0.3
+
+# ln(radius) at which the softened cutoff begins towards the minimum
+config.measurement.plugins['modelfit_CModel'].initial.empiricalPriorConfig.logRadiusMinInner=-6.0
+
+# Minimum ln(radius).
+config.measurement.plugins['modelfit_CModel'].initial.empiricalPriorConfig.logRadiusMinOuter=-6.001
+
+# Mean of the Student's T distribution used for ln(radius) at large radius, and the transition point between a flat distribution and the Student's T.
+config.measurement.plugins['modelfit_CModel'].initial.empiricalPriorConfig.logRadiusMu=-1.0
+
+# Number of degrees of freedom for the Student's T distribution on ln(radius).
+config.measurement.plugins['modelfit_CModel'].initial.empiricalPriorConfig.logRadiusNu=50.0
+
+# Width of the Student's T distribution in ln(radius).
+config.measurement.plugins['modelfit_CModel'].initial.empiricalPriorConfig.logRadiusSigma=0.45
+
+# Ellipticity magnitude (conformal shear units) at which the softened cutoff begins
+config.measurement.plugins['modelfit_CModel'].initial.linearPriorConfig.ellipticityMaxInner=2.0
+
+# Maximum ellipticity magnitude (conformal shear units)
+config.measurement.plugins['modelfit_CModel'].initial.linearPriorConfig.ellipticityMaxOuter=2.001
+
+# ln(radius) at which the softened cutoff begins towards the maximum
+config.measurement.plugins['modelfit_CModel'].initial.linearPriorConfig.logRadiusMaxInner=3.0
+
+# Maximum ln(radius)
+config.measurement.plugins['modelfit_CModel'].initial.linearPriorConfig.logRadiusMaxOuter=3.001
+
+# ln(radius) at which the softened cutoff begins towards the minimum
+config.measurement.plugins['modelfit_CModel'].initial.linearPriorConfig.logRadiusMinInner=-6.0
+
+# The ratio P(logRadiusMinInner)/P(logRadiusMaxInner)
+config.measurement.plugins['modelfit_CModel'].initial.linearPriorConfig.logRadiusMinMaxRatio=1.0
+
+# Minimum ln(radius)
+config.measurement.plugins['modelfit_CModel'].initial.linearPriorConfig.logRadiusMinOuter=-6.001
+
+# Maximum radius used in approximating profile with Gaussians (0=default for this profile)
+config.measurement.plugins['modelfit_CModel'].initial.maxRadius=0
+
+# Number of Gaussian used to approximate the profile
+config.measurement.plugins['modelfit_CModel'].initial.nComponents=3
+
+# whether to save all iterations for debugging purposes
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.doSaveIterations=False
+
+# If the maximum of the gradient falls below this threshold, consider the algorithm converged
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.gradientThreshold=0.001
+
+# maximum number of iterations (i.e. function evaluations and trust region subproblems) per step
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.maxInnerIterations=20
+
+# maximum number of steps
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.maxOuterIterations=500
+
+# If the trust radius falls below this threshold, consider the algorithm converged
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.minTrustRadiusThreshold=0.01
+
+# If true, ignore the SR1 update term in the Hessian, resulting in a Levenberg-Marquardt-like method
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.noSR1Term=False
+
+# absolute step size used for numerical derivatives (added to other steps)
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.numDiffAbsStep=0.0
+
+# relative step size used for numerical derivatives (added to other steps)
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.numDiffRelStep=0.0
+
+# step size (in units of trust radius) used for numerical derivatives (added to relative step)
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.numDiffTrustRadiusStep=0.1
+
+# Skip the SR1 update if |v||s| / (|v||s|) is less than this threshold
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.skipSR1UpdateThreshold=1e-08
+
+# steps with reduction ratio greater than this are accepted
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.stepAcceptThreshold=0.0
+
+# when increase the trust region size, multiply the radius by this factor
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.trustRegionGrowFactor=2.0
+
+# steps with reduction radio greater than this may increase the trust radius
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.trustRegionGrowReductionRatio=0.75
+
+# steps with length this fraction of the trust radius may increase the trust radius
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.trustRegionGrowStepFraction=0.8
+
+# the initial trust region will be set to this value
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.trustRegionInitialSize=1.0
+
+# when reducing the trust region size, multiply the radius by this factor
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.trustRegionShrinkFactor=0.3333333333333333
+
+# steps with reduction radio less than this will decrease the trust radius
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.trustRegionShrinkReductionRatio=0.25
+
+# value passed as the tolerance to solveTrustRegion
+config.measurement.plugins['modelfit_CModel'].initial.optimizer.trustRegionSolverTolerance=1e-08
+
+# Name of the Prior that defines the model to fit (a filename in $MEAS_MODELFIT_DIR/data, with no extension), if priorSource='FILE'.  Ignored for forced fitting.
+config.measurement.plugins['modelfit_CModel'].initial.priorName=''
+
+# One of 'FILE', 'LINEAR', 'EMPIRICAL', or 'NONE', indicating whether the prior should be loaded from disk, created from one of the nested prior config/control objects, or None
+config.measurement.plugins['modelfit_CModel'].initial.priorSource='EMPIRICAL'
+
+# Name of the shapelet.RadialProfile that defines the model to fit
+config.measurement.plugins['modelfit_CModel'].initial.profileName='lux'
+
+# Use per-pixel variances as weights in the nonlinear fit (the final linear fit for flux never uses per-pixel variances)
+config.measurement.plugins['modelfit_CModel'].initial.usePixelWeights=True
+
+# Scale the likelihood by this factor to artificially reweight it w.r.t. the prior.
+config.measurement.plugins['modelfit_CModel'].initial.weightsMultiplier=1.0
+
+# Minimum initial radius in pixels (used to regularize initial moments-based PSF deconvolution)
+config.measurement.plugins['modelfit_CModel'].minInitialRadius=0.1
+
+# Field name prefix of the Shapelet PSF approximation used to convolve the galaxy model; must contain a set of fields matching the schema defined by shapelet.MultiShapeletFunctionKey.
+config.measurement.plugins['modelfit_CModel'].psfName='modelfit_DoubleShapeletPsfApprox'
+
+# Mask planes that indicate pixels that should be ignored in the fit.
+config.measurement.plugins['modelfit_CModel'].region.badMaskPlanes=['EDGE', 'SAT', 'BAD', 'NO_DATA']
+
+# Abort if the fit region grows beyond this many pixels.
+config.measurement.plugins['modelfit_CModel'].region.maxArea=100000
+
+# Maximum fraction of pixels that may be ignored due to masks; more than this and we don't even try.
+config.measurement.plugins['modelfit_CModel'].region.maxBadPixelFraction=0.1
+
+# Use this multiple of the initial fit ellipse then grow by the PSF width to determine the maximum final fit region size.
+config.measurement.plugins['modelfit_CModel'].region.nFitRadiiMax=3.0
+
+# Use this multiple of the initial fit ellipse then grow by the PSF width to determine the minimum final fit region size.
+config.measurement.plugins['modelfit_CModel'].region.nFitRadiiMin=1.0
+
+# Use this multiple of the Kron ellipse to set the fit region (for the final fit region, subject to the nFitRadiiMin and nFitRadiiMax constraints).
+config.measurement.plugins['modelfit_CModel'].region.nKronRadii=1.5
+
+# Grow the initial fit ellipses by this factor before comparing with the Kron/Footprint region
+config.measurement.plugins['modelfit_CModel'].region.nPsfSigmaGrow=2.0
+
+# If the Kron radius is less than this multiple of the PSF width, ignore it and fall back to a PSF-oriented ellipse scaled to match the area of the footprint or this radius (whichever is larger).
+config.measurement.plugins['modelfit_CModel'].region.nPsfSigmaMin=4.0
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['modelfit_CModel'].doMeasure=True
+
+# whether to run this plugin in single-object mode
+config.measurement.plugins['ext_photometryKron_KronFlux'].doMeasure=True
+
+# If true check that the Kron radius exceeds some minimum
+config.measurement.plugins['ext_photometryKron_KronFlux'].enforceMinimumRadius=True
+
+# if true, use existing shape and centroid measurements instead of fitting
+config.measurement.plugins['ext_photometryKron_KronFlux'].fixed=False
+
+# Largest aperture for which to use the slow, accurate, sinc aperture code
+config.measurement.plugins['ext_photometryKron_KronFlux'].maxSincRadius=10.0
+
+# Minimum Kron radius (if == 0.0 use PSF's Kron radius) if enforceMinimumRadius. Also functions as fallback aperture radius if set.
+config.measurement.plugins['ext_photometryKron_KronFlux'].minimumRadius=0.0
+
+# Number of times to iterate when setting the Kron radius
+config.measurement.plugins['ext_photometryKron_KronFlux'].nIterForRadius=1
+
+# Number of Kron radii for Kron flux
+config.measurement.plugins['ext_photometryKron_KronFlux'].nRadiusForFlux=2.5
+
+# Multiplier of rms size for aperture used to initially estimate the Kron radius
+config.measurement.plugins['ext_photometryKron_KronFlux'].nSigmaForRadius=6.0
+
+# Name of field specifying reference Kron radius for forced measurement
+config.measurement.plugins['ext_photometryKron_KronFlux'].refRadiusName='ext_photometryKron_KronFlux_radius'
+
+# Smooth image with N(0, smoothingSigma^2) Gaussian while estimating R_K
+config.measurement.plugins['ext_photometryKron_KronFlux'].smoothingSigma=-1.0
+
+# Use the Footprint size as part of initial estimate of Kron radius
+config.measurement.plugins['ext_photometryKron_KronFlux'].useFootprintRadius=False
+
+config.measurement.plugins.names=['base_Variance', 'ext_photometryKron_KronFlux', 'base_SkyCoord', 'ext_shapeHSM_HsmShapeKsb', 'base_PixelFlags', 'base_InputCount', 'base_LocalBackground', 'base_SdssShape', 'base_CircularApertureFlux', 'ext_shapeHSM_HsmPsfMoments', 'ext_shapeHSM_HsmShapeRegauss', 'modelfit_DoubleShapeletPsfApprox', 'base_PsfFlux', 'ext_shapeHSM_HsmSourceMoments', 'base_NaiveCentroid', 'modelfit_CModel', 'base_SdssCentroid', 'base_GaussianFlux', 'base_Blendedness']
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_PsfFlux'].doMeasure=True
+
+# Mask planes that indicate pixels that should be excluded from the fit
+config.measurement.undeblended['base_PsfFlux'].badMaskPlanes=[]
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_PeakLikelihoodFlux'].doMeasure=True
+
+# Name of warping kernel (e.g. "lanczos4") used to compute the peak
+config.measurement.undeblended['base_PeakLikelihoodFlux'].warpingKernelName='lanczos4'
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_GaussianFlux'].doMeasure=True
+
+# FIXME! NEVER DOCUMENTED!
+config.measurement.undeblended['base_GaussianFlux'].background=0.0
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_NaiveCentroid'].doMeasure=True
+
+# Value to subtract from the image pixel values
+config.measurement.undeblended['base_NaiveCentroid'].background=0.0
+
+# Do check that the centroid is contained in footprint.
+config.measurement.undeblended['base_NaiveCentroid'].doFootprintCheck=True
+
+# If set > 0, Centroid Check also checks distance from footprint peak.
+config.measurement.undeblended['base_NaiveCentroid'].maxDistToPeak=-1.0
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_SdssCentroid'].doMeasure=True
+
+# maximum allowed binning
+config.measurement.undeblended['base_SdssCentroid'].binmax=16
+
+# Do check that the centroid is contained in footprint.
+config.measurement.undeblended['base_SdssCentroid'].doFootprintCheck=True
+
+# If set > 0, Centroid Check also checks distance from footprint peak.
+config.measurement.undeblended['base_SdssCentroid'].maxDistToPeak=-1.0
+
+# if the peak's less than this insist on binning at least once
+config.measurement.undeblended['base_SdssCentroid'].peakMin=-1.0
+
+# fiddle factor for adjusting the binning
+config.measurement.undeblended['base_SdssCentroid'].wfac=1.5
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_PixelFlags'].doMeasure=True
+
+# List of mask planes to be searched for which occur anywhere within a footprint. If any of the planes are found they will have a corresponding pixel flag set.
+config.measurement.undeblended['base_PixelFlags'].masksFpAnywhere=[]
+
+# List of mask planes to be searched for which occur in the center of a footprint. If any of the planes are found they will have a corresponding pixel flag set.
+config.measurement.undeblended['base_PixelFlags'].masksFpCenter=[]
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_SdssShape'].doMeasure=True
+
+# Additional value to add to background
+config.measurement.undeblended['base_SdssShape'].background=0.0
+
+# Whether to also compute the shape of the PSF model
+config.measurement.undeblended['base_SdssShape'].doMeasurePsf=True
+
+# Maximum number of iterations
+config.measurement.undeblended['base_SdssShape'].maxIter=100
+
+# Maximum centroid shift, limited to 2-10
+config.measurement.undeblended['base_SdssShape'].maxShift=0.0
+
+# Convergence tolerance for e1,e2
+config.measurement.undeblended['base_SdssShape'].tol1=9.999999747378752e-06
+
+# Convergence tolerance for FWHM
+config.measurement.undeblended['base_SdssShape'].tol2=9.999999747378752e-05
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_ScaledApertureFlux'].doMeasure=True
+
+# Scaling factor of PSF FWHM for aperture radius.
+config.measurement.undeblended['base_ScaledApertureFlux'].scale=3.14
+
+# Warping kernel used to shift Sinc photometry coefficients to different center positions
+config.measurement.undeblended['base_ScaledApertureFlux'].shiftKernel='lanczos5'
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_CircularApertureFlux'].doMeasure=True
+
+# Maximum radius (in pixels) for which the sinc algorithm should be used instead of the faster naive algorithm.  For elliptical apertures, this is the minor axis radius.
+config.measurement.undeblended['base_CircularApertureFlux'].maxSincRadius=10.0
+
+# Radius (in pixels) of apertures.
+config.measurement.undeblended['base_CircularApertureFlux'].radii=[3.0, 4.5, 6.0, 9.0, 12.0, 17.0, 25.0, 35.0, 50.0, 70.0]
+
+# Warping kernel used to shift Sinc photometry coefficients to different center positions
+config.measurement.undeblended['base_CircularApertureFlux'].shiftKernel='lanczos5'
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_Blendedness'].doMeasure=True
+
+# Whether to compute quantities related to the Gaussian-weighted flux
+config.measurement.undeblended['base_Blendedness'].doFlux=True
+
+# Whether to compute HeavyFootprint dot products (the old deblend.blendedness parameter)
+config.measurement.undeblended['base_Blendedness'].doOld=True
+
+# Whether to compute quantities related to the Gaussian-weighted shape
+config.measurement.undeblended['base_Blendedness'].doShape=True
+
+# Radius factor that sets the maximum extent of the weight function (and hence the flux measurements)
+config.measurement.undeblended['base_Blendedness'].nSigmaWeightMax=3.0
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_LocalBackground'].doMeasure=True
+
+# Inner radius for background annulus as a multiple of the PSF sigma
+config.measurement.undeblended['base_LocalBackground'].annulusInner=7.0
+
+# Outer radius for background annulus as a multiple of the PSF sigma
+config.measurement.undeblended['base_LocalBackground'].annulusOuter=15.0
+
+# Mask planes that indicate pixels that should be excluded from the measurement
+config.measurement.undeblended['base_LocalBackground'].badMaskPlanes=['BAD', 'SAT', 'NO_DATA']
+
+# Number of sigma-clipping iterations for background measurement
+config.measurement.undeblended['base_LocalBackground'].bgIter=3
+
+# Rejection threshold (in standard deviations) for background measurement
+config.measurement.undeblended['base_LocalBackground'].bgRej=3.0
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_FPPosition'].doMeasure=True
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_Jacobian'].doMeasure=True
+
+# Nominal pixel size (arcsec)
+config.measurement.undeblended['base_Jacobian'].pixelScale=0.5
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_Variance'].doMeasure=True
+
+# Scale factor to apply to shape for aperture
+config.measurement.undeblended['base_Variance'].scale=5.0
+
+# Mask planes to ignore
+config.measurement.undeblended['base_Variance'].mask=['DETECTED', 'DETECTED_NEGATIVE', 'BAD', 'SAT']
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_InputCount'].doMeasure=True
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_PeakCentroid'].doMeasure=True
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['base_SkyCoord'].doMeasure=True
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['ext_shapeHSM_HsmShapeBj'].doMeasure=True
+
+# Mask planes that indicate pixels that should be excluded from the fit
+config.measurement.undeblended['ext_shapeHSM_HsmShapeBj'].badMaskPlanes=None
+
+# Field name for number of deblend children
+config.measurement.undeblended['ext_shapeHSM_HsmShapeBj'].deblendNChild=None
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['ext_shapeHSM_HsmShapeLinear'].doMeasure=True
+
+# Mask planes that indicate pixels that should be excluded from the fit
+config.measurement.undeblended['ext_shapeHSM_HsmShapeLinear'].badMaskPlanes=None
+
+# Field name for number of deblend children
+config.measurement.undeblended['ext_shapeHSM_HsmShapeLinear'].deblendNChild=None
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['ext_shapeHSM_HsmShapeKsb'].doMeasure=True
+
+# Mask planes that indicate pixels that should be excluded from the fit
+config.measurement.undeblended['ext_shapeHSM_HsmShapeKsb'].badMaskPlanes=None
+
+# Field name for number of deblend children
+config.measurement.undeblended['ext_shapeHSM_HsmShapeKsb'].deblendNChild=None
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['ext_shapeHSM_HsmShapeRegauss'].doMeasure=True
+
+# Mask planes that indicate pixels that should be excluded from the fit
+config.measurement.undeblended['ext_shapeHSM_HsmShapeRegauss'].badMaskPlanes=None
+
+# Field name for number of deblend children
+config.measurement.undeblended['ext_shapeHSM_HsmShapeRegauss'].deblendNChild=None
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['ext_shapeHSM_HsmSourceMoments'].doMeasure=True
+
+# Store measured flux?
+config.measurement.undeblended['ext_shapeHSM_HsmSourceMoments'].addFlux=None
+
+# Mask planes used to reject bad pixels.
+config.measurement.undeblended['ext_shapeHSM_HsmSourceMoments'].badMaskPlanes=None
+
+# Use round weight function?
+config.measurement.undeblended['ext_shapeHSM_HsmSourceMoments'].roundMoments=None
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['ext_shapeHSM_HsmSourceMomentsRound'].doMeasure=True
+
+# Store measured flux?
+config.measurement.undeblended['ext_shapeHSM_HsmSourceMomentsRound'].addFlux=None
+
+# Mask planes used to reject bad pixels.
+config.measurement.undeblended['ext_shapeHSM_HsmSourceMomentsRound'].badMaskPlanes=None
+
+# Use round weight function?
+config.measurement.undeblended['ext_shapeHSM_HsmSourceMomentsRound'].roundMoments=None
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['ext_shapeHSM_HsmPsfMoments'].doMeasure=True
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].doMeasure=True
+
+# Shapelet order of inner expansion (0 == Gaussian)
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].innerOrder=2
+
+# Don't allow the semi-major radius of any component to go above this fraction of the PSF image width
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].maxRadiusBoxFraction=0.4
+
+# Don't allow the semi-minor radius of any component to drop below this value (pixels)
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].minRadius=1.0
+
+# Don't allow the determinant radii of the two components to differ by less than this (pixels)
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].minRadiusDiff=0.5
+
+# whether to save all iterations for debugging purposes
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.doSaveIterations=False
+
+# If the maximum of the gradient falls below this threshold, consider the algorithm converged
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.gradientThreshold=1e-05
+
+# maximum number of iterations (i.e. function evaluations and trust region subproblems) per step
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.maxInnerIterations=20
+
+# maximum number of steps
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.maxOuterIterations=500
+
+# If the trust radius falls below this threshold, consider the algorithm converged
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.minTrustRadiusThreshold=1e-05
+
+# If true, ignore the SR1 update term in the Hessian, resulting in a Levenberg-Marquardt-like method
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.noSR1Term=False
+
+# absolute step size used for numerical derivatives (added to other steps)
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.numDiffAbsStep=0.0
+
+# relative step size used for numerical derivatives (added to other steps)
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.numDiffRelStep=0.0
+
+# step size (in units of trust radius) used for numerical derivatives (added to relative step)
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.numDiffTrustRadiusStep=0.1
+
+# Skip the SR1 update if |v||s| / (|v||s|) is less than this threshold
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.skipSR1UpdateThreshold=1e-08
+
+# steps with reduction ratio greater than this are accepted
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.stepAcceptThreshold=0.0
+
+# when increase the trust region size, multiply the radius by this factor
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.trustRegionGrowFactor=2.0
+
+# steps with reduction radio greater than this may increase the trust radius
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.trustRegionGrowReductionRatio=0.75
+
+# steps with length this fraction of the trust radius may increase the trust radius
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.trustRegionGrowStepFraction=0.8
+
+# the initial trust region will be set to this value
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.trustRegionInitialSize=1.0
+
+# when reducing the trust region size, multiply the radius by this factor
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.trustRegionShrinkFactor=0.3333333333333333
+
+# steps with reduction radio less than this will decrease the trust radius
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.trustRegionShrinkReductionRatio=0.25
+
+# value passed as the tolerance to solveTrustRegion
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].optimizer.trustRegionSolverTolerance=1e-08
+
+# Shapelet order of outer expansion (0 == Gaussian)
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].outerOrder=1
+
+# Initial outer Gaussian peak height divided by inner Gaussian peak height
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].peakRatio=0.1
+
+# Initial outer radius divided by inner radius
+config.measurement.undeblended['modelfit_DoubleShapeletPsfApprox'].radiusRatio=2.0
+
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models={}
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian']=lsst.meas.modelfit.GeneralPsfFitterConfig()
+# Default value for the noiseSigma parameter in GeneralPsfFitter.apply()
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].defaultNoiseSigma=0.001
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].inner.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].inner.order=-1
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].inner.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].inner.radiusFactor=0.5
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].inner.radiusPriorSigma=0.5
+
+# whether to save all iterations for debugging purposes
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.doSaveIterations=False
+
+# If the maximum of the gradient falls below this threshold, consider the algorithm converged
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.gradientThreshold=1e-05
+
+# maximum number of iterations (i.e. function evaluations and trust region subproblems) per step
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.maxInnerIterations=20
+
+# maximum number of steps
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.maxOuterIterations=500
+
+# If the trust radius falls below this threshold, consider the algorithm converged
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.minTrustRadiusThreshold=1e-05
+
+# If true, ignore the SR1 update term in the Hessian, resulting in a Levenberg-Marquardt-like method
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.noSR1Term=False
+
+# absolute step size used for numerical derivatives (added to other steps)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.numDiffAbsStep=0.0
+
+# relative step size used for numerical derivatives (added to other steps)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.numDiffRelStep=0.0
+
+# step size (in units of trust radius) used for numerical derivatives (added to relative step)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.numDiffTrustRadiusStep=0.1
+
+# Skip the SR1 update if |v||s| / (|v||s|) is less than this threshold
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.skipSR1UpdateThreshold=1e-08
+
+# steps with reduction ratio greater than this are accepted
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.stepAcceptThreshold=0.0
+
+# when increase the trust region size, multiply the radius by this factor
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.trustRegionGrowFactor=2.0
+
+# steps with reduction radio greater than this may increase the trust radius
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.trustRegionGrowReductionRatio=0.75
+
+# steps with length this fraction of the trust radius may increase the trust radius
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.trustRegionGrowStepFraction=0.8
+
+# the initial trust region will be set to this value
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.trustRegionInitialSize=1.0
+
+# when reducing the trust region size, multiply the radius by this factor
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.trustRegionShrinkFactor=0.3333333333333333
+
+# steps with reduction radio less than this will decrease the trust radius
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.trustRegionShrinkReductionRatio=0.25
+
+# value passed as the tolerance to solveTrustRegion
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].optimizer.trustRegionSolverTolerance=1e-08
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].outer.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].outer.order=-1
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].outer.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].outer.radiusFactor=4.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].outer.radiusPriorSigma=0.5
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].primary.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].primary.order=0
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].primary.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].primary.radiusFactor=1.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].primary.radiusPriorSigma=0.5
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].wings.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].wings.order=-1
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].wings.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].wings.radiusFactor=2.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['SingleGaussian'].wings.radiusPriorSigma=0.5
+
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian']=lsst.meas.modelfit.GeneralPsfFitterConfig()
+# Default value for the noiseSigma parameter in GeneralPsfFitter.apply()
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].defaultNoiseSigma=0.001
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].inner.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].inner.order=-1
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].inner.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].inner.radiusFactor=0.5
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].inner.radiusPriorSigma=0.5
+
+# whether to save all iterations for debugging purposes
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.doSaveIterations=False
+
+# If the maximum of the gradient falls below this threshold, consider the algorithm converged
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.gradientThreshold=1e-05
+
+# maximum number of iterations (i.e. function evaluations and trust region subproblems) per step
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.maxInnerIterations=20
+
+# maximum number of steps
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.maxOuterIterations=500
+
+# If the trust radius falls below this threshold, consider the algorithm converged
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.minTrustRadiusThreshold=1e-05
+
+# If true, ignore the SR1 update term in the Hessian, resulting in a Levenberg-Marquardt-like method
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.noSR1Term=False
+
+# absolute step size used for numerical derivatives (added to other steps)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.numDiffAbsStep=0.0
+
+# relative step size used for numerical derivatives (added to other steps)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.numDiffRelStep=0.0
+
+# step size (in units of trust radius) used for numerical derivatives (added to relative step)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.numDiffTrustRadiusStep=0.1
+
+# Skip the SR1 update if |v||s| / (|v||s|) is less than this threshold
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.skipSR1UpdateThreshold=1e-08
+
+# steps with reduction ratio greater than this are accepted
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.stepAcceptThreshold=0.0
+
+# when increase the trust region size, multiply the radius by this factor
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.trustRegionGrowFactor=2.0
+
+# steps with reduction radio greater than this may increase the trust radius
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.trustRegionGrowReductionRatio=0.75
+
+# steps with length this fraction of the trust radius may increase the trust radius
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.trustRegionGrowStepFraction=0.8
+
+# the initial trust region will be set to this value
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.trustRegionInitialSize=1.0
+
+# when reducing the trust region size, multiply the radius by this factor
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.trustRegionShrinkFactor=0.3333333333333333
+
+# steps with reduction radio less than this will decrease the trust radius
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.trustRegionShrinkReductionRatio=0.25
+
+# value passed as the tolerance to solveTrustRegion
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].optimizer.trustRegionSolverTolerance=1e-08
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].outer.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].outer.order=-1
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].outer.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].outer.radiusFactor=4.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].outer.radiusPriorSigma=0.5
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].primary.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].primary.order=0
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].primary.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].primary.radiusFactor=1.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].primary.radiusPriorSigma=0.5
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].wings.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].wings.order=0
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].wings.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].wings.radiusFactor=2.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleGaussian'].wings.radiusPriorSigma=0.5
+
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet']=lsst.meas.modelfit.GeneralPsfFitterConfig()
+# Default value for the noiseSigma parameter in GeneralPsfFitter.apply()
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].defaultNoiseSigma=0.001
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].inner.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].inner.order=-1
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].inner.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].inner.radiusFactor=0.5
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].inner.radiusPriorSigma=0.5
+
+# whether to save all iterations for debugging purposes
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.doSaveIterations=False
+
+# If the maximum of the gradient falls below this threshold, consider the algorithm converged
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.gradientThreshold=1e-05
+
+# maximum number of iterations (i.e. function evaluations and trust region subproblems) per step
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.maxInnerIterations=20
+
+# maximum number of steps
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.maxOuterIterations=500
+
+# If the trust radius falls below this threshold, consider the algorithm converged
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.minTrustRadiusThreshold=1e-05
+
+# If true, ignore the SR1 update term in the Hessian, resulting in a Levenberg-Marquardt-like method
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.noSR1Term=False
+
+# absolute step size used for numerical derivatives (added to other steps)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.numDiffAbsStep=0.0
+
+# relative step size used for numerical derivatives (added to other steps)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.numDiffRelStep=0.0
+
+# step size (in units of trust radius) used for numerical derivatives (added to relative step)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.numDiffTrustRadiusStep=0.1
+
+# Skip the SR1 update if |v||s| / (|v||s|) is less than this threshold
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.skipSR1UpdateThreshold=1e-08
+
+# steps with reduction ratio greater than this are accepted
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.stepAcceptThreshold=0.0
+
+# when increase the trust region size, multiply the radius by this factor
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.trustRegionGrowFactor=2.0
+
+# steps with reduction radio greater than this may increase the trust radius
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.trustRegionGrowReductionRatio=0.75
+
+# steps with length this fraction of the trust radius may increase the trust radius
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.trustRegionGrowStepFraction=0.8
+
+# the initial trust region will be set to this value
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.trustRegionInitialSize=1.0
+
+# when reducing the trust region size, multiply the radius by this factor
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.trustRegionShrinkFactor=0.3333333333333333
+
+# steps with reduction radio less than this will decrease the trust radius
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.trustRegionShrinkReductionRatio=0.25
+
+# value passed as the tolerance to solveTrustRegion
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].optimizer.trustRegionSolverTolerance=1e-08
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].outer.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].outer.order=-1
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].outer.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].outer.radiusFactor=4.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].outer.radiusPriorSigma=0.5
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].primary.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].primary.order=2
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].primary.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].primary.radiusFactor=1.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].primary.radiusPriorSigma=0.5
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].wings.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].wings.order=1
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].wings.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].wings.radiusFactor=2.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['DoubleShapelet'].wings.radiusPriorSigma=0.5
+
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full']=lsst.meas.modelfit.GeneralPsfFitterConfig()
+# Default value for the noiseSigma parameter in GeneralPsfFitter.apply()
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].defaultNoiseSigma=0.001
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].inner.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].inner.order=0
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].inner.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].inner.radiusFactor=0.5
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].inner.radiusPriorSigma=0.5
+
+# whether to save all iterations for debugging purposes
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.doSaveIterations=False
+
+# If the maximum of the gradient falls below this threshold, consider the algorithm converged
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.gradientThreshold=1e-05
+
+# maximum number of iterations (i.e. function evaluations and trust region subproblems) per step
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.maxInnerIterations=20
+
+# maximum number of steps
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.maxOuterIterations=500
+
+# If the trust radius falls below this threshold, consider the algorithm converged
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.minTrustRadiusThreshold=1e-05
+
+# If true, ignore the SR1 update term in the Hessian, resulting in a Levenberg-Marquardt-like method
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.noSR1Term=False
+
+# absolute step size used for numerical derivatives (added to other steps)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.numDiffAbsStep=0.0
+
+# relative step size used for numerical derivatives (added to other steps)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.numDiffRelStep=0.0
+
+# step size (in units of trust radius) used for numerical derivatives (added to relative step)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.numDiffTrustRadiusStep=0.1
+
+# Skip the SR1 update if |v||s| / (|v||s|) is less than this threshold
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.skipSR1UpdateThreshold=1e-08
+
+# steps with reduction ratio greater than this are accepted
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.stepAcceptThreshold=0.0
+
+# when increase the trust region size, multiply the radius by this factor
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.trustRegionGrowFactor=2.0
+
+# steps with reduction radio greater than this may increase the trust radius
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.trustRegionGrowReductionRatio=0.75
+
+# steps with length this fraction of the trust radius may increase the trust radius
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.trustRegionGrowStepFraction=0.8
+
+# the initial trust region will be set to this value
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.trustRegionInitialSize=1.0
+
+# when reducing the trust region size, multiply the radius by this factor
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.trustRegionShrinkFactor=0.3333333333333333
+
+# steps with reduction radio less than this will decrease the trust radius
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.trustRegionShrinkReductionRatio=0.25
+
+# value passed as the tolerance to solveTrustRegion
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].optimizer.trustRegionSolverTolerance=1e-08
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].outer.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].outer.order=0
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].outer.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].outer.radiusFactor=4.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].outer.radiusPriorSigma=0.5
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].primary.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].primary.order=4
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].primary.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].primary.radiusFactor=1.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].primary.radiusPriorSigma=0.5
+
+# sigma in an isotropic 2-d Gaussian prior on the conformal-shear ellipticity eta
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].wings.ellipticityPriorSigma=0.3
+
+# shapelet order for this component; negative to disable this component completely
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].wings.order=4
+
+# sigma (in pixels) in an isotropic 2-d Gaussian prior on the center of this shapelet component, relative to the center of the PSF image
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].wings.positionPriorSigma=0.1
+
+# Sets the fiducial radius of this component relative to the 'primary radius' of the PSF: either the second-moments radius of the PSF image (in an initial fit), or the radius of the primary component in a previous fit.  Ignored if the previous fit included this component (as then we can just use that radius).
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].wings.radiusFactor=2.0
+
+# sigma in a Gaussian prior on ln(radius/fiducialRadius)
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].models['Full'].wings.radiusPriorSigma=0.5
+
+# a sequence of model names indicating which models should be fit, and their order
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].sequence=['DoubleShapelet']
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['modelfit_GeneralShapeletPsfApprox'].doMeasure=True
+
+# Whether to record the steps the optimizer takes (or just the number, if running as a plugin)
+config.measurement.undeblended['modelfit_CModel'].dev.doRecordHistory=True
+
+# Whether to record the time spent in this stage
+config.measurement.undeblended['modelfit_CModel'].dev.doRecordTime=True
+
+# Softened core width for ellipticity distribution (conformal shear units).
+config.measurement.undeblended['modelfit_CModel'].dev.empiricalPriorConfig.ellipticityCore=0.001
+
+# Width of exponential ellipticity distribution (conformal shear units).
+config.measurement.undeblended['modelfit_CModel'].dev.empiricalPriorConfig.ellipticitySigma=0.3
+
+# ln(radius) at which the softened cutoff begins towards the minimum
+config.measurement.undeblended['modelfit_CModel'].dev.empiricalPriorConfig.logRadiusMinInner=-6.0
+
+# Minimum ln(radius).
+config.measurement.undeblended['modelfit_CModel'].dev.empiricalPriorConfig.logRadiusMinOuter=-6.001
+
+# Mean of the Student's T distribution used for ln(radius) at large radius, and the transition point between a flat distribution and the Student's T.
+config.measurement.undeblended['modelfit_CModel'].dev.empiricalPriorConfig.logRadiusMu=-1.0
+
+# Number of degrees of freedom for the Student's T distribution on ln(radius).
+config.measurement.undeblended['modelfit_CModel'].dev.empiricalPriorConfig.logRadiusNu=50.0
+
+# Width of the Student's T distribution in ln(radius).
+config.measurement.undeblended['modelfit_CModel'].dev.empiricalPriorConfig.logRadiusSigma=0.45
+
+# Ellipticity magnitude (conformal shear units) at which the softened cutoff begins
+config.measurement.undeblended['modelfit_CModel'].dev.linearPriorConfig.ellipticityMaxInner=2.0
+
+# Maximum ellipticity magnitude (conformal shear units)
+config.measurement.undeblended['modelfit_CModel'].dev.linearPriorConfig.ellipticityMaxOuter=2.001
+
+# ln(radius) at which the softened cutoff begins towards the maximum
+config.measurement.undeblended['modelfit_CModel'].dev.linearPriorConfig.logRadiusMaxInner=3.0
+
+# Maximum ln(radius)
+config.measurement.undeblended['modelfit_CModel'].dev.linearPriorConfig.logRadiusMaxOuter=3.001
+
+# ln(radius) at which the softened cutoff begins towards the minimum
+config.measurement.undeblended['modelfit_CModel'].dev.linearPriorConfig.logRadiusMinInner=-6.0
+
+# The ratio P(logRadiusMinInner)/P(logRadiusMaxInner)
+config.measurement.undeblended['modelfit_CModel'].dev.linearPriorConfig.logRadiusMinMaxRatio=1.0
+
+# Minimum ln(radius)
+config.measurement.undeblended['modelfit_CModel'].dev.linearPriorConfig.logRadiusMinOuter=-6.001
+
+# Maximum radius used in approximating profile with Gaussians (0=default for this profile)
+config.measurement.undeblended['modelfit_CModel'].dev.maxRadius=0
+
+# Number of Gaussian used to approximate the profile
+config.measurement.undeblended['modelfit_CModel'].dev.nComponents=8
+
+# whether to save all iterations for debugging purposes
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.doSaveIterations=False
+
+# If the maximum of the gradient falls below this threshold, consider the algorithm converged
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.gradientThreshold=1e-05
+
+# maximum number of iterations (i.e. function evaluations and trust region subproblems) per step
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.maxInnerIterations=20
+
+# maximum number of steps
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.maxOuterIterations=500
+
+# If the trust radius falls below this threshold, consider the algorithm converged
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.minTrustRadiusThreshold=1e-05
+
+# If true, ignore the SR1 update term in the Hessian, resulting in a Levenberg-Marquardt-like method
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.noSR1Term=False
+
+# absolute step size used for numerical derivatives (added to other steps)
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.numDiffAbsStep=0.0
+
+# relative step size used for numerical derivatives (added to other steps)
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.numDiffRelStep=0.0
+
+# step size (in units of trust radius) used for numerical derivatives (added to relative step)
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.numDiffTrustRadiusStep=0.1
+
+# Skip the SR1 update if |v||s| / (|v||s|) is less than this threshold
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.skipSR1UpdateThreshold=1e-08
+
+# steps with reduction ratio greater than this are accepted
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.stepAcceptThreshold=0.0
+
+# when increase the trust region size, multiply the radius by this factor
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.trustRegionGrowFactor=2.0
+
+# steps with reduction radio greater than this may increase the trust radius
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.trustRegionGrowReductionRatio=0.75
+
+# steps with length this fraction of the trust radius may increase the trust radius
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.trustRegionGrowStepFraction=0.8
+
+# the initial trust region will be set to this value
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.trustRegionInitialSize=1.0
+
+# when reducing the trust region size, multiply the radius by this factor
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.trustRegionShrinkFactor=0.3333333333333333
+
+# steps with reduction radio less than this will decrease the trust radius
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.trustRegionShrinkReductionRatio=0.25
+
+# value passed as the tolerance to solveTrustRegion
+config.measurement.undeblended['modelfit_CModel'].dev.optimizer.trustRegionSolverTolerance=1e-08
+
+# Name of the Prior that defines the model to fit (a filename in $MEAS_MODELFIT_DIR/data, with no extension), if priorSource='FILE'.  Ignored for forced fitting.
+config.measurement.undeblended['modelfit_CModel'].dev.priorName=''
+
+# One of 'FILE', 'LINEAR', 'EMPIRICAL', or 'NONE', indicating whether the prior should be loaded from disk, created from one of the nested prior config/control objects, or None
+config.measurement.undeblended['modelfit_CModel'].dev.priorSource='EMPIRICAL'
+
+# Name of the shapelet.RadialProfile that defines the model to fit
+config.measurement.undeblended['modelfit_CModel'].dev.profileName='luv'
+
+# Use per-pixel variances as weights in the nonlinear fit (the final linear fit for flux never uses per-pixel variances)
+config.measurement.undeblended['modelfit_CModel'].dev.usePixelWeights=False
+
+# Scale the likelihood by this factor to artificially reweight it w.r.t. the prior.
+config.measurement.undeblended['modelfit_CModel'].dev.weightsMultiplier=1.0
+
+# Whether to record the steps the optimizer takes (or just the number, if running as a plugin)
+config.measurement.undeblended['modelfit_CModel'].exp.doRecordHistory=True
+
+# Whether to record the time spent in this stage
+config.measurement.undeblended['modelfit_CModel'].exp.doRecordTime=True
+
+# Softened core width for ellipticity distribution (conformal shear units).
+config.measurement.undeblended['modelfit_CModel'].exp.empiricalPriorConfig.ellipticityCore=0.001
+
+# Width of exponential ellipticity distribution (conformal shear units).
+config.measurement.undeblended['modelfit_CModel'].exp.empiricalPriorConfig.ellipticitySigma=0.3
+
+# ln(radius) at which the softened cutoff begins towards the minimum
+config.measurement.undeblended['modelfit_CModel'].exp.empiricalPriorConfig.logRadiusMinInner=-6.0
+
+# Minimum ln(radius).
+config.measurement.undeblended['modelfit_CModel'].exp.empiricalPriorConfig.logRadiusMinOuter=-6.001
+
+# Mean of the Student's T distribution used for ln(radius) at large radius, and the transition point between a flat distribution and the Student's T.
+config.measurement.undeblended['modelfit_CModel'].exp.empiricalPriorConfig.logRadiusMu=-1.0
+
+# Number of degrees of freedom for the Student's T distribution on ln(radius).
+config.measurement.undeblended['modelfit_CModel'].exp.empiricalPriorConfig.logRadiusNu=50.0
+
+# Width of the Student's T distribution in ln(radius).
+config.measurement.undeblended['modelfit_CModel'].exp.empiricalPriorConfig.logRadiusSigma=0.45
+
+# Ellipticity magnitude (conformal shear units) at which the softened cutoff begins
+config.measurement.undeblended['modelfit_CModel'].exp.linearPriorConfig.ellipticityMaxInner=2.0
+
+# Maximum ellipticity magnitude (conformal shear units)
+config.measurement.undeblended['modelfit_CModel'].exp.linearPriorConfig.ellipticityMaxOuter=2.001
+
+# ln(radius) at which the softened cutoff begins towards the maximum
+config.measurement.undeblended['modelfit_CModel'].exp.linearPriorConfig.logRadiusMaxInner=3.0
+
+# Maximum ln(radius)
+config.measurement.undeblended['modelfit_CModel'].exp.linearPriorConfig.logRadiusMaxOuter=3.001
+
+# ln(radius) at which the softened cutoff begins towards the minimum
+config.measurement.undeblended['modelfit_CModel'].exp.linearPriorConfig.logRadiusMinInner=-6.0
+
+# The ratio P(logRadiusMinInner)/P(logRadiusMaxInner)
+config.measurement.undeblended['modelfit_CModel'].exp.linearPriorConfig.logRadiusMinMaxRatio=1.0
+
+# Minimum ln(radius)
+config.measurement.undeblended['modelfit_CModel'].exp.linearPriorConfig.logRadiusMinOuter=-6.001
+
+# Maximum radius used in approximating profile with Gaussians (0=default for this profile)
+config.measurement.undeblended['modelfit_CModel'].exp.maxRadius=0
+
+# Number of Gaussian used to approximate the profile
+config.measurement.undeblended['modelfit_CModel'].exp.nComponents=6
+
+# whether to save all iterations for debugging purposes
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.doSaveIterations=False
+
+# If the maximum of the gradient falls below this threshold, consider the algorithm converged
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.gradientThreshold=1e-05
+
+# maximum number of iterations (i.e. function evaluations and trust region subproblems) per step
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.maxInnerIterations=20
+
+# maximum number of steps
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.maxOuterIterations=250
+
+# If the trust radius falls below this threshold, consider the algorithm converged
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.minTrustRadiusThreshold=1e-05
+
+# If true, ignore the SR1 update term in the Hessian, resulting in a Levenberg-Marquardt-like method
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.noSR1Term=False
+
+# absolute step size used for numerical derivatives (added to other steps)
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.numDiffAbsStep=0.0
+
+# relative step size used for numerical derivatives (added to other steps)
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.numDiffRelStep=0.0
+
+# step size (in units of trust radius) used for numerical derivatives (added to relative step)
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.numDiffTrustRadiusStep=0.1
+
+# Skip the SR1 update if |v||s| / (|v||s|) is less than this threshold
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.skipSR1UpdateThreshold=1e-08
+
+# steps with reduction ratio greater than this are accepted
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.stepAcceptThreshold=0.0
+
+# when increase the trust region size, multiply the radius by this factor
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.trustRegionGrowFactor=2.0
+
+# steps with reduction radio greater than this may increase the trust radius
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.trustRegionGrowReductionRatio=0.75
+
+# steps with length this fraction of the trust radius may increase the trust radius
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.trustRegionGrowStepFraction=0.8
+
+# the initial trust region will be set to this value
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.trustRegionInitialSize=1.0
+
+# when reducing the trust region size, multiply the radius by this factor
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.trustRegionShrinkFactor=0.3333333333333333
+
+# steps with reduction radio less than this will decrease the trust radius
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.trustRegionShrinkReductionRatio=0.25
+
+# value passed as the tolerance to solveTrustRegion
+config.measurement.undeblended['modelfit_CModel'].exp.optimizer.trustRegionSolverTolerance=1e-08
+
+# Name of the Prior that defines the model to fit (a filename in $MEAS_MODELFIT_DIR/data, with no extension), if priorSource='FILE'.  Ignored for forced fitting.
+config.measurement.undeblended['modelfit_CModel'].exp.priorName=''
+
+# One of 'FILE', 'LINEAR', 'EMPIRICAL', or 'NONE', indicating whether the prior should be loaded from disk, created from one of the nested prior config/control objects, or None
+config.measurement.undeblended['modelfit_CModel'].exp.priorSource='EMPIRICAL'
+
+# Name of the shapelet.RadialProfile that defines the model to fit
+config.measurement.undeblended['modelfit_CModel'].exp.profileName='lux'
+
+# Use per-pixel variances as weights in the nonlinear fit (the final linear fit for flux never uses per-pixel variances)
+config.measurement.undeblended['modelfit_CModel'].exp.usePixelWeights=False
+
+# Scale the likelihood by this factor to artificially reweight it w.r.t. the prior.
+config.measurement.undeblended['modelfit_CModel'].exp.weightsMultiplier=1.0
+
+# If the 2nd-moments shape used to initialize the fit failed, use the PSF moments multiplied by this.  If <= 0.0, abort the fit early instead.
+config.measurement.undeblended['modelfit_CModel'].fallbackInitialMomentsPsfFactor=1.5
+
+# Whether to record the steps the optimizer takes (or just the number, if running as a plugin)
+config.measurement.undeblended['modelfit_CModel'].initial.doRecordHistory=True
+
+# Whether to record the time spent in this stage
+config.measurement.undeblended['modelfit_CModel'].initial.doRecordTime=True
+
+# Softened core width for ellipticity distribution (conformal shear units).
+config.measurement.undeblended['modelfit_CModel'].initial.empiricalPriorConfig.ellipticityCore=0.001
+
+# Width of exponential ellipticity distribution (conformal shear units).
+config.measurement.undeblended['modelfit_CModel'].initial.empiricalPriorConfig.ellipticitySigma=0.3
+
+# ln(radius) at which the softened cutoff begins towards the minimum
+config.measurement.undeblended['modelfit_CModel'].initial.empiricalPriorConfig.logRadiusMinInner=-6.0
+
+# Minimum ln(radius).
+config.measurement.undeblended['modelfit_CModel'].initial.empiricalPriorConfig.logRadiusMinOuter=-6.001
+
+# Mean of the Student's T distribution used for ln(radius) at large radius, and the transition point between a flat distribution and the Student's T.
+config.measurement.undeblended['modelfit_CModel'].initial.empiricalPriorConfig.logRadiusMu=-1.0
+
+# Number of degrees of freedom for the Student's T distribution on ln(radius).
+config.measurement.undeblended['modelfit_CModel'].initial.empiricalPriorConfig.logRadiusNu=50.0
+
+# Width of the Student's T distribution in ln(radius).
+config.measurement.undeblended['modelfit_CModel'].initial.empiricalPriorConfig.logRadiusSigma=0.45
+
+# Ellipticity magnitude (conformal shear units) at which the softened cutoff begins
+config.measurement.undeblended['modelfit_CModel'].initial.linearPriorConfig.ellipticityMaxInner=2.0
+
+# Maximum ellipticity magnitude (conformal shear units)
+config.measurement.undeblended['modelfit_CModel'].initial.linearPriorConfig.ellipticityMaxOuter=2.001
+
+# ln(radius) at which the softened cutoff begins towards the maximum
+config.measurement.undeblended['modelfit_CModel'].initial.linearPriorConfig.logRadiusMaxInner=3.0
+
+# Maximum ln(radius)
+config.measurement.undeblended['modelfit_CModel'].initial.linearPriorConfig.logRadiusMaxOuter=3.001
+
+# ln(radius) at which the softened cutoff begins towards the minimum
+config.measurement.undeblended['modelfit_CModel'].initial.linearPriorConfig.logRadiusMinInner=-6.0
+
+# The ratio P(logRadiusMinInner)/P(logRadiusMaxInner)
+config.measurement.undeblended['modelfit_CModel'].initial.linearPriorConfig.logRadiusMinMaxRatio=1.0
+
+# Minimum ln(radius)
+config.measurement.undeblended['modelfit_CModel'].initial.linearPriorConfig.logRadiusMinOuter=-6.001
+
+# Maximum radius used in approximating profile with Gaussians (0=default for this profile)
+config.measurement.undeblended['modelfit_CModel'].initial.maxRadius=0
+
+# Number of Gaussian used to approximate the profile
+config.measurement.undeblended['modelfit_CModel'].initial.nComponents=3
+
+# whether to save all iterations for debugging purposes
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.doSaveIterations=False
+
+# If the maximum of the gradient falls below this threshold, consider the algorithm converged
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.gradientThreshold=0.001
+
+# maximum number of iterations (i.e. function evaluations and trust region subproblems) per step
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.maxInnerIterations=20
+
+# maximum number of steps
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.maxOuterIterations=500
+
+# If the trust radius falls below this threshold, consider the algorithm converged
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.minTrustRadiusThreshold=0.01
+
+# If true, ignore the SR1 update term in the Hessian, resulting in a Levenberg-Marquardt-like method
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.noSR1Term=False
+
+# absolute step size used for numerical derivatives (added to other steps)
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.numDiffAbsStep=0.0
+
+# relative step size used for numerical derivatives (added to other steps)
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.numDiffRelStep=0.0
+
+# step size (in units of trust radius) used for numerical derivatives (added to relative step)
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.numDiffTrustRadiusStep=0.1
+
+# Skip the SR1 update if |v||s| / (|v||s|) is less than this threshold
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.skipSR1UpdateThreshold=1e-08
+
+# steps with reduction ratio greater than this are accepted
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.stepAcceptThreshold=0.0
+
+# when increase the trust region size, multiply the radius by this factor
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.trustRegionGrowFactor=2.0
+
+# steps with reduction radio greater than this may increase the trust radius
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.trustRegionGrowReductionRatio=0.75
+
+# steps with length this fraction of the trust radius may increase the trust radius
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.trustRegionGrowStepFraction=0.8
+
+# the initial trust region will be set to this value
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.trustRegionInitialSize=1.0
+
+# when reducing the trust region size, multiply the radius by this factor
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.trustRegionShrinkFactor=0.3333333333333333
+
+# steps with reduction radio less than this will decrease the trust radius
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.trustRegionShrinkReductionRatio=0.25
+
+# value passed as the tolerance to solveTrustRegion
+config.measurement.undeblended['modelfit_CModel'].initial.optimizer.trustRegionSolverTolerance=1e-08
+
+# Name of the Prior that defines the model to fit (a filename in $MEAS_MODELFIT_DIR/data, with no extension), if priorSource='FILE'.  Ignored for forced fitting.
+config.measurement.undeblended['modelfit_CModel'].initial.priorName=''
+
+# One of 'FILE', 'LINEAR', 'EMPIRICAL', or 'NONE', indicating whether the prior should be loaded from disk, created from one of the nested prior config/control objects, or None
+config.measurement.undeblended['modelfit_CModel'].initial.priorSource='EMPIRICAL'
+
+# Name of the shapelet.RadialProfile that defines the model to fit
+config.measurement.undeblended['modelfit_CModel'].initial.profileName='lux'
+
+# Use per-pixel variances as weights in the nonlinear fit (the final linear fit for flux never uses per-pixel variances)
+config.measurement.undeblended['modelfit_CModel'].initial.usePixelWeights=True
+
+# Scale the likelihood by this factor to artificially reweight it w.r.t. the prior.
+config.measurement.undeblended['modelfit_CModel'].initial.weightsMultiplier=1.0
+
+# Minimum initial radius in pixels (used to regularize initial moments-based PSF deconvolution)
+config.measurement.undeblended['modelfit_CModel'].minInitialRadius=0.1
+
+# Field name prefix of the Shapelet PSF approximation used to convolve the galaxy model; must contain a set of fields matching the schema defined by shapelet.MultiShapeletFunctionKey.
+config.measurement.undeblended['modelfit_CModel'].psfName='modelfit_DoubleShapeletPsfApprox'
+
+# Mask planes that indicate pixels that should be ignored in the fit.
+config.measurement.undeblended['modelfit_CModel'].region.badMaskPlanes=['EDGE', 'SAT', 'BAD', 'NO_DATA']
+
+# Abort if the fit region grows beyond this many pixels.
+config.measurement.undeblended['modelfit_CModel'].region.maxArea=100000
+
+# Maximum fraction of pixels that may be ignored due to masks; more than this and we don't even try.
+config.measurement.undeblended['modelfit_CModel'].region.maxBadPixelFraction=0.1
+
+# Use this multiple of the initial fit ellipse then grow by the PSF width to determine the maximum final fit region size.
+config.measurement.undeblended['modelfit_CModel'].region.nFitRadiiMax=3.0
+
+# Use this multiple of the initial fit ellipse then grow by the PSF width to determine the minimum final fit region size.
+config.measurement.undeblended['modelfit_CModel'].region.nFitRadiiMin=1.0
+
+# Use this multiple of the Kron ellipse to set the fit region (for the final fit region, subject to the nFitRadiiMin and nFitRadiiMax constraints).
+config.measurement.undeblended['modelfit_CModel'].region.nKronRadii=1.5
+
+# Grow the initial fit ellipses by this factor before comparing with the Kron/Footprint region
+config.measurement.undeblended['modelfit_CModel'].region.nPsfSigmaGrow=2.0
+
+# If the Kron radius is less than this multiple of the PSF width, ignore it and fall back to a PSF-oriented ellipse scaled to match the area of the footprint or this radius (whichever is larger).
+config.measurement.undeblended['modelfit_CModel'].region.nPsfSigmaMin=4.0
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['modelfit_CModel'].doMeasure=True
+
+# whether to run this plugin in single-object mode
+config.measurement.undeblended['ext_photometryKron_KronFlux'].doMeasure=True
+
+# If true check that the Kron radius exceeds some minimum
+config.measurement.undeblended['ext_photometryKron_KronFlux'].enforceMinimumRadius=True
+
+# if true, use existing shape and centroid measurements instead of fitting
+config.measurement.undeblended['ext_photometryKron_KronFlux'].fixed=False
+
+# Largest aperture for which to use the slow, accurate, sinc aperture code
+config.measurement.undeblended['ext_photometryKron_KronFlux'].maxSincRadius=10.0
+
+# Minimum Kron radius (if == 0.0 use PSF's Kron radius) if enforceMinimumRadius. Also functions as fallback aperture radius if set.
+config.measurement.undeblended['ext_photometryKron_KronFlux'].minimumRadius=0.0
+
+# Number of times to iterate when setting the Kron radius
+config.measurement.undeblended['ext_photometryKron_KronFlux'].nIterForRadius=1
+
+# Number of Kron radii for Kron flux
+config.measurement.undeblended['ext_photometryKron_KronFlux'].nRadiusForFlux=2.5
+
+# Multiplier of rms size for aperture used to initially estimate the Kron radius
+config.measurement.undeblended['ext_photometryKron_KronFlux'].nSigmaForRadius=6.0
+
+# Name of field specifying reference Kron radius for forced measurement
+config.measurement.undeblended['ext_photometryKron_KronFlux'].refRadiusName='ext_photometryKron_KronFlux_radius'
+
+# Smooth image with N(0, smoothingSigma^2) Gaussian while estimating R_K
+config.measurement.undeblended['ext_photometryKron_KronFlux'].smoothingSigma=-1.0
+
+# Use the Footprint size as part of initial estimate of Kron radius
+config.measurement.undeblended['ext_photometryKron_KronFlux'].useFootprintRadius=False
+
+config.measurement.undeblended.names=[]
+# Name of field in schema with number of deblended children
+config.setPrimaryFlags.nChildKeyName='deblend_nChild'
+
+# Names of filters which should never be primary
+config.setPrimaryFlags.pseudoFilterList=['sky']
+
+# Whether to match sources to CCD catalogs to propagate flags (to e.g. identify PSF stars)
+config.doPropagateFlags=True
+
+# Source catalog flags to propagate, with the threshold of relative occurrence (valid range: [0-1], default is 0.2).  Coadd object will have flag set if the fraction of input visits in which it is flagged is greater than the threshold.
+config.propagateFlags.flags={'calib_psf_candidate': 0.2, 'calib_psf_used': 0.2, 'calib_psf_reserved': 0.2, 'calib_astrometry_used': 0.2, 'calib_photometry_used': 0.2, 'calib_photometry_reserved': 0.2}
+
+# Source matching radius (arcsec)
+config.propagateFlags.matchRadius=0.2
+
+# Name of ccd to give to butler
+config.propagateFlags.ccdName='ccd'
+
+# Match sources to reference catalog?
+config.doMatchSources=True
+
+# Matching radius, arcsec
+config.match.matchRadius=0.25
+
+# Apply flux limit?
+config.match.sourceSelection.doFluxLimit=False
+
+# Apply flag limitation?
+config.match.sourceSelection.doFlags=False
+
+# Apply unresolved limitation?
+config.match.sourceSelection.doUnresolved=False
+
+# Apply signal-to-noise limit?
+config.match.sourceSelection.doSignalToNoise=False
+
+# Apply isolated limitation?
+config.match.sourceSelection.doIsolated=False
+
+# Select objects with value greater than this
+config.match.sourceSelection.fluxLimit.minimum=None
+
+# Select objects with value less than this
+config.match.sourceSelection.fluxLimit.maximum=None
+
+# Name of the source flux field to use.
+config.match.sourceSelection.fluxLimit.fluxField='slot_CalibFlux_instFlux'
+
+# List of source flag fields that must be set for a source to be used.
+config.match.sourceSelection.flags.good=[]
+
+# List of source flag fields that must NOT be set for a source to be used.
+config.match.sourceSelection.flags.bad=['base_PixelFlags_flag_edge', 'base_PixelFlags_flag_saturated', 'base_PsfFlux_flags']
+
+# Select objects with value greater than this
+config.match.sourceSelection.unresolved.minimum=None
+
+# Select objects with value less than this
+config.match.sourceSelection.unresolved.maximum=0.5
+
+# Name of column for star/galaxy separation
+config.match.sourceSelection.unresolved.name='base_ClassificationExtendedness_value'
+
+# Select objects with value greater than this
+config.match.sourceSelection.signalToNoise.minimum=None
+
+# Select objects with value less than this
+config.match.sourceSelection.signalToNoise.maximum=None
+
+# Name of the source flux field to use.
+config.match.sourceSelection.signalToNoise.fluxField='base_PsfFlux_instFlux'
+
+# Name of the source flux error field to use.
+config.match.sourceSelection.signalToNoise.errField='base_PsfFlux_instFluxErr'
+
+# Name of column for parent
+config.match.sourceSelection.isolated.parentName='parent'
+
+# Name of column for nChild
+config.match.sourceSelection.isolated.nChildName='deblend_nChild'
+
+# Apply magnitude limit?
+config.match.referenceSelection.doMagLimit=False
+
+# Apply flag limitation?
+config.match.referenceSelection.doFlags=False
+
+# Apply unresolved limitation?
+config.match.referenceSelection.doUnresolved=False
+
+# Apply signal-to-noise limit?
+config.match.referenceSelection.doSignalToNoise=False
+
+# Apply magnitude error limit?
+config.match.referenceSelection.doMagError=False
+
+# Select objects with value greater than this
+config.match.referenceSelection.magLimit.minimum=None
+
+# Select objects with value less than this
+config.match.referenceSelection.magLimit.maximum=None
+
+# Name of the source flux field to use.
+config.match.referenceSelection.magLimit.fluxField='flux'
+
+# List of source flag fields that must be set for a source to be used.
+config.match.referenceSelection.flags.good=[]
+
+# List of source flag fields that must NOT be set for a source to be used.
+config.match.referenceSelection.flags.bad=[]
+
+# Select objects with value greater than this
+config.match.referenceSelection.unresolved.minimum=None
+
+# Select objects with value less than this
+config.match.referenceSelection.unresolved.maximum=0.5
+
+# Name of column for star/galaxy separation
+config.match.referenceSelection.unresolved.name='base_ClassificationExtendedness_value'
+
+# Select objects with value greater than this
+config.match.referenceSelection.signalToNoise.minimum=None
+
+# Select objects with value less than this
+config.match.referenceSelection.signalToNoise.maximum=None
+
+# Name of the source flux field to use.
+config.match.referenceSelection.signalToNoise.fluxField='flux'
+
+# Name of the source flux error field to use.
+config.match.referenceSelection.signalToNoise.errField='flux_err'
+
+# Select objects with value greater than this
+config.match.referenceSelection.magError.minimum=None
+
+# Select objects with value less than this
+config.match.referenceSelection.magError.maximum=None
+
+# Name of the source flux error field to use.
+config.match.referenceSelection.magError.magErrField='mag_err'
+
+config.match.referenceSelection.colorLimits={}
+# Padding to add to 4 all edges of the bounding box (pixels)
+config.match.refObjLoader.pixelMargin=300
+
+# Default reference catalog filter to use if filter not specified in exposure; if blank then filter must be specified in exposure
+config.match.refObjLoader.defaultFilter=''
+
+# Mapping of camera filter name: reference catalog filter name; each reference filter must exist
+config.match.refObjLoader.filterMap={'g2': 'g', 'r2': 'r', 'i3': 'i', 'u2': 'g'}
+
+# Require that the fields needed to correct proper motion (epoch, pm_ra and pm_dec) are present?
+config.match.refObjLoader.requireProperMotion=False
+
+# Name of the ingested reference dataset
+config.match.refObjLoader.ref_dataset_name='pan-starrs'
+
+# Write reference matches in denormalized format? This format uses more disk space, but is more convenient to read.
+config.doWriteMatchesDenormalized=False
+
+# Name of coadd
+config.coaddName='deep'
+
+# Size of psfCache
+config.psfCache=100
+
+# Strictness of Astropy unit compatibility check, can be 'raise', 'warn' or 'silent'
+config.checkUnitsParseStrict='raise'
+
+# Apply aperture corrections
+config.doApCorr=True
+
+# flux measurement algorithms in getApCorrNameSet() to ignore; if a name is listed that does not appear in getApCorrNameSet() then a warning is logged
+config.applyApCorr.ignoreList=[]
+
+# set the general failure flag for a flux when it cannot be aperture-corrected?
+config.applyApCorr.doFlagApCorrFailures=True
+
+# flux measurement algorithms to be aperture-corrected by reference to another algorithm; this is a mapping alg1:alg2, where 'alg1' is the algorithm being corrected, and 'alg2' is the algorithm supplying the corrections
+config.applyApCorr.proxies={}
+
+# Run catalogCalculation task
+config.doRunCatalogCalculation=True
+
+# critical ratio of model to psf flux
+config.catalogCalculation.plugins['base_ClassificationExtendedness'].fluxRatio=0.925
+
+# correction factor for modelFlux error
+config.catalogCalculation.plugins['base_ClassificationExtendedness'].modelErrFactor=0.0
+
+# correction factor for psfFlux error
+config.catalogCalculation.plugins['base_ClassificationExtendedness'].psfErrFactor=0.0
+
+config.catalogCalculation.plugins.names=['base_FootprintArea', 'base_ClassificationExtendedness']
+# Should be set to True if fake sources have been inserted into the input data.
+config.hasFakes=False
+
+# name for connection inputSchema
+config.connections.inputSchema='{inputCoaddName}Coadd_deblendedFlux_schema'
+
+# name for connection outputSchema
+config.connections.outputSchema='{inputCoaddName}Coadd_meas_schema'
+
+# name for connection refCat
+config.connections.refCat='pan-starrs'
+
+# name for connection exposure
+config.connections.exposure='{inputCoaddName}Coadd_calexp'
+
+# name for connection skyMap
+config.connections.skyMap='{inputCoaddName}Coadd_skyMap'
+
+# name for connection visitCatalogs
+config.connections.visitCatalogs='src'
+
+# name for connection inputCatalog
+config.connections.inputCatalog='{inputCoaddName}Coadd_deblendedFlux'
+
+# name for connection outputSources
+config.connections.outputSources='{outputCoaddName}Coadd_meas'
+
+# name for connection matchResult
+config.connections.matchResult='{outputCoaddName}Coadd_measMatch'
+
+# name for connection denormMatches
+config.connections.denormMatches='{outputCoaddName}Coadd_measMatchFull'
+
+# Template parameter used to format corresponding field template parameter
+config.connections.inputCoaddName='deep'
+
+# Template parameter used to format corresponding field template parameter
+config.connections.outputCoaddName='deep'
+

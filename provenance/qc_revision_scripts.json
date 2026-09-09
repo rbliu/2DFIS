@@ -1,0 +1,10 @@
+[
+  {
+    "path": "qc/adapters/build_visit_qc.py",
+    "original_revision_sha256": "c4f671e1cccf7f3ab8c65f6c49e2a6059b93fb0637222fa3fc7bc50ab09c5a29"
+  },
+  {
+    "path": "qc/adapters/render_visit_qc_original_style.py",
+    "original_revision_sha256": "c60d1982aea4c1041479ce1a3d035ea9b59cbb06a2376d241d266829e6a2e7aa"
+  }
+]

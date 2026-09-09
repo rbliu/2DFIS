@@ -1,0 +1,8 @@
+!RepositoryCfg_v1
+_mapper: !!python/name:lsst.obs.cfht.megacamMapper.MegacamMapper ''
+_mapperArgs: {}
+_parents:
+- ../coadd
+_policy: null
+_root: null
+dirty: true
