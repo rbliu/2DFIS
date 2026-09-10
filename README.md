@@ -1,5 +1,8 @@
 # 2DFIS: input data and processing provenance
 
+Paper: [arXiv:2602.08312](https://arxiv.org/abs/2602.08312)
+([PDF](https://arxiv.org/pdf/2602.08312)).
+
 Supporting material for the 2DFIS overview paper: the CFHT input-exposure
 manifest, recovered LSST Gen2 configuration files and commands, and LoVoCCS
 catalog-calibration and quality-control source code. This is a **provenance archive**, not a new science
